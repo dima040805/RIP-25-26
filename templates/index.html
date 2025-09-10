@@ -124,7 +124,7 @@
                                 </div>
                             </div>
                         </div>
-                                <a href="/planets?query={{ $.query }}" class="btn-primary">Добавить к исследованию</a>
+                                <!-- <a href="/planets?query={{ $.query }}" class="btn-primary">Добавить к исследованию</a> -->
                     </div>
                 </li>
             {{ end }}
@@ -134,10 +134,15 @@
                 <img src = "/static/img/Telescope.png" alt title="Пусто" class = "root_icon">
                 </img>
         {{ else }}
-            <a href="/research/{{ .researchId }}">
-                <img src = "/static/img/Telescope.png" alt title="{{ .researchCount }}" class = "root_icon_top">
-                </img>
-            </a> 
+
+        <a href="/research/{{ .researchId }}">
+        <div class="icon-container">
+            <span class="counter-overlay root_icon_top">{{ .researchCount }}</span>
+            <img src="/static/img/Telescope.png" alt="Telescope" class="root_icon_top">
+
+        </div>
+        </a>
+
         {{ end }}
     </main>
 </body>
