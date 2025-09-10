@@ -171,7 +171,6 @@ margin-top: 16px;
     border-radius: 50%;
 }
 .root_icon_top{
-    background-color: #FFFFFF;
     width: 96px;
     height: 96px;
     border-radius: 50%;
@@ -181,7 +180,7 @@ margin-top: 16px;
     left: 16px;
     z-index: 100;
     overflow: visible; 
-        background-color: rgb(14, 210, 232);
+    background-color: rgb(14, 210, 232);
 }
 
 .root_icon_top img {
