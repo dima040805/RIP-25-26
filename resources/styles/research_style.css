@@ -109,11 +109,12 @@
 }
 
 .Content-list-section {
-    width: 323.5px;
+    width: 170px;
     height: 40px;
     border: none;
-    border-bottom: 0.842px solid #F0F0F0;
+    border: 0.842px solid #F0F0F0;
     outline: none;
+    padding-left: 8px;
     font-family: Public Sans Web, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol;
     font-size: 14.4px;
 }

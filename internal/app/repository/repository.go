@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"strings"
+
 )
 
 type Repository struct {
@@ -17,10 +18,16 @@ type Planet struct {
 	Name        string
 	Distance    int
 	Description string
-	Mass        float32
+	Mass        float64
 	Discovery   int
 	ID          int
 	StarRadius  int
+}
+
+type Research struct{
+	date string
+	shine float64
+	planetRadius float64
 }
 
 func (r *Repository) GetPlanets() ([]Planet, error) {
@@ -157,6 +164,33 @@ func (r *Repository) GetPlanetsByName(name string) ([]Planet, error) {
 }
 
 func (r *Repository) GetResearchPlanets(id int) []Planet {
+	// planetParametrs := []Research{
+	// 	{
+
+	// 	}
+	// }
+	// researchPlanets := {1: //ID Заявки
+	// 						{
+	// 							dateResearch: "" //Поле заявки
+	// 							planetParametrs:[  //Поля м-м
+	// 									{
+	// 										id: 1,
+	// 										shine: 0, //Вводится со странички заявки
+	// 										planetRadius: 0, //Поле расчета, выводится на страничку заявки
+	// 									},
+	// 									{
+	// 										id: 3,
+	// 										shine: 0,					
+	// 										planetRadius: 0,
+	// 									},
+	// 									{	
+	// 										id: 5,
+	// 										shine: 0,
+	// 										planetRadius: 0,
+	// 									}
+	// 									]
+	// 						}
+	// 					}
 	researchPlanets := map[int][]int{1: {1, 3, 5}}
 	var planetsInGroup []Planet
 	for _, planetID := range researchPlanets[id] {
