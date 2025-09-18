@@ -18,6 +18,10 @@ func main() {
 	// Migrate the schema
 	err = db.AutoMigrate(
 		&ds.Planet{},
+		&ds.PlanetsResearch{},
+		&ds.Research{},
+		&ds.Users{},
+
 	)
 	if err != nil {
 		panic("cant migrate db")

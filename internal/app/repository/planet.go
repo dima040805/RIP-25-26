@@ -8,7 +8,7 @@ import (
 
 func (r *Repository) GetPlanets() ([]ds.Planet, error) {
 	var planets []ds.Planet
-	err := r.db.Find(&planets).Error
+	err := r.db.Order("id").Find(&planets).Error
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +27,6 @@ func (r *Repository) GetPlanet(id int) (ds.Planet, error) {
 	}
 	return planet, nil
 }
-
 
 func (r *Repository) GetPlanetsByName(name string) ([]ds.Planet, error) {
 	var planets []ds.Planet
