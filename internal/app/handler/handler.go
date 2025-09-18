@@ -70,9 +70,11 @@ func (h *Handler) ResearchHandler(ctx *gin.Context) {
 	if err != nil {
 		logrus.Error(err)
 	}
+	research := h.Repository.GetResearch(id)
 	researchPlanets := h.Repository.GetResearchPlanets(id)
 	ctx.HTML(http.StatusOK, "research.html", gin.H{
-		"researchPlanets": researchPlanets,
-		"count":           len(researchPlanets),
+		"researchPlanets": researchPlanets, 
+		"research": research,
+		"count":           h.Repository.GetResearchCount(1),
 	})
 }

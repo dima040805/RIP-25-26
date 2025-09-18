@@ -24,11 +24,17 @@ type Planet struct {
 	StarRadius  int
 }
 
-type Research struct{
-	date string
-	shine float64
-	planetRadius float64
+type PlanetsToResearch struct{
+	PlanetId int
+	PlanetShine float64
+	PlanetRadius float64
 }
+
+type Research struct{
+	ResearchDate string
+	PlanetsParametrs []PlanetsToResearch
+}
+
 
 func (r *Repository) GetPlanets() ([]Planet, error) {
 
@@ -163,38 +169,40 @@ func (r *Repository) GetPlanetsByName(name string) ([]Planet, error) {
 	return result, nil
 }
 
-func (r *Repository) GetResearchPlanets(id int) []Planet {
-	// planetParametrs := []Research{
-	// 	{
+func (r *Repository) GetResearch(id int) Research {
+	researchPlanets := map[int]Research{
+		1: { // ID Заявки
+			ResearchDate: "16.09.25",
+			PlanetsParametrs: []PlanetsToResearch{ // Поля м-м
+				{
+					PlanetId:      1,
+					PlanetShine:   1.5, // Вводится со странички заявки
+					PlanetRadius:  98500, // Поле расчета, выводится на страничку заявки
+				},
+				{
+					PlanetId:      3,
+					PlanetShine:   1.3,
+					PlanetRadius:  12,
+				},
+				{
+					PlanetId:      5,
+					PlanetShine:   1.5,
+					PlanetRadius:  13,
+				},
+			},
+		},
+	}
 
-	// 	}
-	// }
-	// researchPlanets := {1: //ID Заявки
-	// 						{
-	// 							dateResearch: "" //Поле заявки
-	// 							planetParametrs:[  //Поля м-м
-	// 									{
-	// 										id: 1,
-	// 										shine: 0, //Вводится со странички заявки
-	// 										planetRadius: 0, //Поле расчета, выводится на страничку заявки
-	// 									},
-	// 									{
-	// 										id: 3,
-	// 										shine: 0,					
-	// 										planetRadius: 0,
-	// 									},
-	// 									{	
-	// 										id: 5,
-	// 										shine: 0,
-	// 										planetRadius: 0,
-	// 									}
-	// 									]
-	// 						}
-	// 					}
-	researchPlanets := map[int][]int{1: {1, 3, 5}}
+
+	return researchPlanets[id]
+}
+
+func (r *Repository) GetResearchPlanets(id int) []Planet{
+	research := r.GetResearch(id)
+
 	var planetsInGroup []Planet
-	for _, planetID := range researchPlanets[id] {
-		planet, err := r.GetPlanet(planetID)
+	for _, _planet := range research.PlanetsParametrs {
+		planet, err := r.GetPlanet(_planet.PlanetId)
 		if err == nil {
 			planetsInGroup = append(planetsInGroup, planet)
 		}
@@ -203,7 +211,8 @@ func (r *Repository) GetResearchPlanets(id int) []Planet {
 }
 
 func (r *Repository) GetResearchCount(id int) int {
-	return len(r.GetResearchPlanets(id))
+	researchPlanets := r.GetResearch(id)
+	return len(researchPlanets.PlanetsParametrs)
 }
 
 func (r *Repository) GetResearchId() int {
