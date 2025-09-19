@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"database/sql"
-	"errors"
+	// "database/sql"
+	// "errors"
 	"fmt"
 
 	"LAB1/internal/app/ds"
@@ -12,7 +12,7 @@ import (
 
 func (r *Repository) GetPlanets() ([]ds.Planet, error) {
 	var planets []ds.Planet
-	err := r.db.Order("id").Find(&planets).Error
+	err := r.db.Order("id").Where("is_delete = false").Find(&planets).Error
 	if err != nil {
 		return nil, err
 	}
@@ -24,33 +24,40 @@ func (r *Repository) GetPlanets() ([]ds.Planet, error) {
 }
 
 func (r *Repository) GetPlanet(id int) (*ds.Planet, error) {
-	query := "SELECT id, image, name, description, distance, mass, discovery, star_radius FROM planets WHERE id = $1"
-	row := r.db.Raw(query, id).Row()
-	planet := &ds.Planet{}
+// 	query := "SELECT id, image, name, description, distance, mass, discovery, star_radius FROM planets WHERE id = $1"
+// 	row := r.db.Raw(query, id).Row()
+// 	planet := &ds.Planet{}
 
-   err := row.Scan(
-		&planet.ID,
-      &planet.Image,
-      &planet.Name,
-      &planet.Description,
-      &planet.Distance,
-      &planet.Mass,
-	  &planet.Discovery,
-      &planet.StarRadius,
-   )
+//    err := row.Scan(
+// 		&planet.ID,
+//       &planet.Image,
+//       &planet.Name,
+//       &planet.Description,
+//       &planet.Distance,
+//       &planet.Mass,
+// 	  &planet.Discovery,
+//       &planet.StarRadius,
+//    )
 
-   if err != nil {
-      if errors.Is(err, sql.ErrNoRows) {
-         return nil, nil // Возвращаем nil, если записи нет
-      }
-      return nil, err
-   }
-	return planet, nil
+//    if err != nil {
+//       if errors.Is(err, sql.ErrNoRows) {
+//          return nil, nil // Возвращаем nil, если записи нет
+//       }
+//       return nil, err
+//    }
+// 	return planet, nil
+
+	planet := ds.Planet{}
+	err := r.db.Where("id = ? and is_delete = ?", id, false).First(&planet).Error
+	if err != nil {
+		return &ds.Planet{}, err
+	}
+	return &planet, nil
 }
 
 func (r *Repository) GetPlanetsByName(name string) ([]ds.Planet, error) {
 	var planets []ds.Planet
-	err := r.db.Where("name ILIKE ?", "%"+name+"%").Find(&planets).Error
+	err := r.db.Where("title ILIKE ? and is_delete = ?", "%"+name+"%", false).Find(&planets).Error
 	if err != nil {
 		return nil, err
 	}
