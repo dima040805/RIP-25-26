@@ -151,6 +151,16 @@ color: #FFFFFF;
 margin-top: 16px;
 }
 
+.btn-primary:hover{
+    background: #F64137;
+
+}
+
+.btn-primary:active{
+    background: #ab2b25;
+
+}
+
 .root_icon{
     background-color: #FFFFFF;
     width: 96px;

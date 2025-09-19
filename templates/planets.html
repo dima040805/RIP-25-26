@@ -100,7 +100,9 @@
                                 </div>
                             </div>
                         </div>
-                                <!-- <a href="/planets?query={{ $.query }}" class="btn-primary">Добавить к исследованию</a> -->
+                        <form action="/planets/{{ .ID }}/add-to-research" style="width: 260px; margin-left: 0;" method="post">
+                            <button type="submit" class="btn-primary">Добавить к исследованию</button>
+                        </form>
                     </div>
                 </li>
             {{ end }}

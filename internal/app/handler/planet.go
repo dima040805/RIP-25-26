@@ -13,7 +13,7 @@ import (
 func (h *Handler) GetPlanets(ctx *gin.Context) {
 	var planets []ds.Planet
 	var err error
-	creatorID := 1
+	creatorID := h.Repository.GetUser()
 
 	searchQuery := ctx.Query("query")
 	if searchQuery == "" {
@@ -42,7 +42,7 @@ func (h *Handler) GetPlanets(ctx *gin.Context) {
 			"error": err.Error(),
 		})
 	}
-	ctx.HTML(http.StatusOK, "index.html", gin.H{
+	ctx.HTML(http.StatusOK, "planets.html", gin.H{
 		"planets":       planets,
 		"researchCount": h.Repository.GetResearchCount(),
 		"query":         searchQuery,
@@ -73,4 +73,28 @@ func (h *Handler) GetPlanet(ctx *gin.Context) {
 	ctx.HTML(http.StatusOK, "planet.html", gin.H{
 		"planet": planet,
 	})
+}
+
+
+func (h *Handler) AddPlanetToResearch(ctx *gin.Context) {
+	research, err := h.Repository.GetResearchDraft(h.Repository.GetUser())
+	researchId := research.ID
+	if err != nil {
+		h.errorHandler(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	planetId, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		h.errorHandler(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	err = h.Repository.AddPlanetToResearch(int(researchId), planetId)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.Redirect(http.StatusFound, "/planets")
 }

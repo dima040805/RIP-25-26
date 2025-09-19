@@ -4,11 +4,13 @@ import (
 	"LAB1/internal/app/ds"
 	"errors"
 	"time"
+
+	"github.com/sirupsen/logrus"
 	// "time"
 	// "github.com/sirupsen/logrus"
 )
 
-var noDraftError = errors.New("no draft for this user")
+var errNoDraft = errors.New("no draft for this user")
 
 
 func (r *Repository) GetPlanetsResearch(id int) ([]ds.PlanetInfo, ds.Research, error) {
@@ -64,7 +66,7 @@ func (r *Repository) CheckCurrentResearchDraft(creatorID int) (ds.Research, erro
 	if res.Error != nil {
 		return ds.Research{}, res.Error
 	} else if res.RowsAffected == 0 {
-		return ds.Research{}, noDraftError
+		return ds.Research{}, errNoDraft
 	}
 	return research, nil
 }
@@ -72,7 +74,7 @@ func (r *Repository) CheckCurrentResearchDraft(creatorID int) (ds.Research, erro
 
 func (r *Repository) GetResearchDraft(creatorID int) (ds.Research, error) {
 	research, err := r.CheckCurrentResearchDraft(creatorID)
-	if err == noDraftError {
+	if err == errNoDraft {
 		research = ds.Research{
 			Status:     "draft",
 			CreatorID:  creatorID,
@@ -87,4 +89,27 @@ func (r *Repository) GetResearchDraft(creatorID int) (ds.Research, error) {
 		return ds.Research{}, err
 	}
 	return research, nil
+}
+
+func (r *Repository) GetResearchCount() int64 {
+	var researchID uint
+	var count int64
+	creatorID := 1
+	// пока что мы захардкодили id создателя заявки, в последующем вы сделаете авторизацию и будете получать его из JWT
+
+	err := r.db.Model(&ds.Research{}).Where("creator_id = ? AND status = ?", creatorID, "draft").Select("id").First(&researchID).Error
+	if err != nil {
+		return 0
+	}
+	err = r.db.Model(&ds.PlanetsResearch{}).Where("research_id = ?", researchID).Count(&count).Error
+	if err != nil {
+		logrus.Println("Error counting records in lists_planets:", err)
+	}
+
+	return count
+}
+
+
+func (r *Repository) DeleteCalculation(researchId int) error{
+	return r.db.Exec("UPDATE researches SET status = 'deleted' WHERE id = ?", researchId).Error
 }

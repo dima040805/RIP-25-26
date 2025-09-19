@@ -24,6 +24,9 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.GET("/planets", h.GetPlanets)
 	router.GET("/planet/:id", h.GetPlanet)
 	router.GET("/research/:id", h.ResearchHandler)
+	router.POST("/planets/:id/add-to-research", h.AddPlanetToResearch)
+	router.POST("/research/:id/delete-research", h.DeleteResearch)
+
 }
 
 func (h *Handler) RegisterStatic(router *gin.Engine) {

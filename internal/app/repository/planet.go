@@ -7,7 +7,6 @@ import (
 
 	"LAB1/internal/app/ds"
 
-	"github.com/sirupsen/logrus"
 )
 
 func (r *Repository) GetPlanets() ([]ds.Planet, error) {
@@ -48,7 +47,7 @@ func (r *Repository) GetPlanet(id int) (*ds.Planet, error) {
 // 	return planet, nil
 
 	planet := ds.Planet{}
-	err := r.db.Where("id = ? and is_delete = ?", id, false).First(&planet).Error
+	err := r.db.Order("id").Where("id = ? and is_delete = ?", id, false).First(&planet).Error
 	if err != nil {
 		return &ds.Planet{}, err
 	}
@@ -57,27 +56,34 @@ func (r *Repository) GetPlanet(id int) (*ds.Planet, error) {
 
 func (r *Repository) GetPlanetsByName(name string) ([]ds.Planet, error) {
 	var planets []ds.Planet
-	err := r.db.Where("title ILIKE ? and is_delete = ?", "%"+name+"%", false).Find(&planets).Error
+	err := r.db.Order("id").Where("name ILIKE ? and is_delete = ?", "%"+name+"%", false).Find(&planets).Error
 	if err != nil {
 		return nil, err
 	}
 	return planets, nil
 }
 
-func (r *Repository) GetResearchCount() int64 {
-	var researchID uint
-	var count int64
-	creatorID := 1
-	// пока что мы захардкодили id создателя заявки, в последующем вы сделаете авторизацию и будете получать его из JWT
 
-	err := r.db.Model(&ds.Research{}).Where("creator_id = ? AND status = ?", creatorID, "draft").Select("id").First(&researchID).Error
-	if err != nil {
-		return 0
-	}
-	err = r.db.Model(&ds.PlanetsResearch{}).Where("research_id = ?", researchID).Count(&count).Error
-	if err != nil {
-		logrus.Println("Error counting records in lists_planets:", err)
+func (r *Repository) AddPlanetToResearch(researchId int, planetId int) error {
+	var planet ds.Planet
+	if err := r.db.First(&planet, planetId).Error; err != nil {
+		return err
 	}
 
-	return count
+	var research ds.Research
+	if err := r.db.First(&research, researchId).Error; err != nil {
+		return err
+	}
+	planetsResearch := ds.PlanetsResearch{}
+	result := r.db.Where("planet_id = ? and research_id = ?", planetId, researchId).Find(&planetsResearch)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected != 0 {
+		return nil
+	}
+	return r.db.Create(&ds.PlanetsResearch{
+		PlanetID:    uint(planetId),
+		ResearchID: uint(researchId),
+	}).Error
 }
