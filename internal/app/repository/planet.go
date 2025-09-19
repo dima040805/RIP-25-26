@@ -74,7 +74,6 @@ func (r *Repository) GetResearchCount() int64 {
 	if err != nil {
 		return 0
 	}
-	fmt.Println(researchID)
 	err = r.db.Model(&ds.PlanetsResearch{}).Where("research_id = ?", researchID).Count(&count).Error
 	if err != nil {
 		logrus.Println("Error counting records in lists_planets:", err)

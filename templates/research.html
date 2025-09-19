@@ -82,7 +82,7 @@
         </div>
 
         <div style="width: auto; margin-bottom: 30px;">
-            <input  type="text" name="Date" class="Content-list-section" placeholder="Введите дату наблюдений" value="{{ .research.ResearchDate }}" style=" width: 500px; margin: auto; margin-top: 30px; display: block;">
+            <input  type="text" name="Date" class="Content-list-section" placeholder="Введите дату наблюдений" value="{{ .research.DateResearch }}" style=" width: 500px; margin: auto; margin-top: 30px; display: block;">
         </div>
 
         <div style="display: flex; width: 1296px; align-items: center; height: 40px; margin: 0 auto; margin-bottom: 20px; 
@@ -96,8 +96,6 @@
         {{ if .researchPlanets }}
             <ul class="grid-list">
                 {{ range $planet := .researchPlanets }}
-                    {{ range $param := $.research.PlanetsParametrs }}
-                        {{ if eq $param.PlanetId $planet.ID }}
                         <li>
                             <div class="hds-content-item" style="align-items: center; padding: 5px; border: 0.7px solid #000; border-radius: 6px;">
                                 <a href="/planet/{{ $planet.ID }}" class="hds-content-item-thumbnail">
@@ -115,16 +113,14 @@
                                 </div>
                                 
                                 <input type="text" name="Shine" class="Content-list-section" 
-                                    placeholder="Введите падение ~1%" value="{{ $param.PlanetShine }}">
+                                    placeholder="Введите падение ~1%" value="{{ $planet.PlanetShine }}">
 
                                 <div style="font-size: 23px; border: 1px solid #000; width: 128px; margin-left: 35px;
                                     border-radius: 8px; padding: 8px 12px; color: #000; text-align: center; background: #fff;">
-                                    {{ $param.PlanetRadius }} км
+                                    {{ $planet.PlanetRadius }} км
                                 </div>
                             </div>
                         </li>
-                        {{ end }}
-                    {{ end }}
                 {{ end }}
             </ul>
         {{ else }}
