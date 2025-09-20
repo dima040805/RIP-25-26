@@ -30,7 +30,6 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 }
 
 func (h *Handler) RegisterStatic(router *gin.Engine) {
-	router.LoadHTMLGlob("/home/muka/Рабочий стол/RIP/LAB1/templates/*")
 	router.Static("/static", "/home/muka/Рабочий стол/RIP/LAB1/resources")
 }
 

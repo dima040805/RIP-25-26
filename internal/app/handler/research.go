@@ -19,10 +19,9 @@ func (h *Handler) ResearchHandler(ctx *gin.Context) {
 		h.errorHandler(ctx, http.StatusInternalServerError, err)
 		return
 	}
-	ctx.HTML(http.StatusOK, "research.html", gin.H{
+	ctx.JSON(http.StatusOK, gin.H{
 		"researchPlanets": researchPlanets,
 		"research":        research,
-		"count":           h.Repository.GetResearchCount(),
 	})
 }
 
@@ -40,5 +39,5 @@ func (h *Handler) DeleteResearch(ctx *gin.Context){
 		return
 	}
 
-	ctx.Redirect(http.StatusFound, "/planets")
+	// ctx.Redirect(http.StatusFound, "/planets")
 }

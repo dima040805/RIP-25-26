@@ -13,7 +13,6 @@ import (
 func (h *Handler) GetPlanets(ctx *gin.Context) {
 	var planets []ds.Planet
 	var err error
-	creatorID := h.Repository.GetUser()
 
 	searchQuery := ctx.Query("query")
 	if searchQuery == "" {
@@ -35,18 +34,9 @@ func (h *Handler) GetPlanets(ctx *gin.Context) {
 			return
 		}
 	}
-	currentResearch, err := h.Repository.GetResearchDraft(creatorID)
-	researchId := int(currentResearch.ID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
-	}
-	ctx.HTML(http.StatusOK, "planets.html", gin.H{
+
+	ctx.JSON(http.StatusOK, gin.H{
 		"planets":       planets,
-		"researchCount": h.Repository.GetResearchCount(),
-		"query":         searchQuery,
-		"researchId":    researchId,
 	})
 }
 
@@ -70,7 +60,7 @@ func (h *Handler) GetPlanet(ctx *gin.Context) {
 		return
 	}
 
-	ctx.HTML(http.StatusOK, "planet.html", gin.H{
+	ctx.JSON(http.StatusOK,  gin.H{
 		"planet": planet,
 	})
 }
@@ -96,5 +86,5 @@ func (h *Handler) AddPlanetToResearch(ctx *gin.Context) {
 		return
 	}
 
-	ctx.Redirect(http.StatusFound, "/planets")
+	// ctx.Redirect(http.StatusFound, "/planets")
 }
