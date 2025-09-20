@@ -35,18 +35,13 @@ func (h *Handler) GetPlanets(ctx *gin.Context) {
 			return
 		}
 	}
-	currentResearch, err := h.Repository.GetResearchDraft(creatorID)
-	researchId := int(currentResearch.ID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
-	}
+	currentResearch, _ := h.Repository.CheckCurrentResearchDraft(creatorID)
+
 	ctx.HTML(http.StatusOK, "planets.html", gin.H{
 		"planets":       planets,
 		"researchCount": h.Repository.GetResearchCount(),
 		"query":         searchQuery,
-		"researchId":    researchId,
+		"researchId":    currentResearch.ID,
 	})
 }
 
