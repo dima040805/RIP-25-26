@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
+	apitypes "LAB1/internal/app/api_types"
 	"LAB1/internal/app/ds"
 
 	"github.com/gin-gonic/gin"
@@ -34,10 +36,11 @@ func (h *Handler) GetPlanets(ctx *gin.Context) {
 			return
 		}
 	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"planets":       planets,
-	})
+	resp := make([]apitypes.PlanetJSON, 0, len(planets))
+	for _, r := range planets {
+		resp = append(resp, apitypes.PlanetToJSON(r))
+	}
+	ctx.JSON(http.StatusOK, resp)
 }
 
 func (h *Handler) GetPlanet(ctx *gin.Context) {
@@ -60,14 +63,28 @@ func (h *Handler) GetPlanet(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK,  gin.H{
-		"planet": planet,
-	})
+	ctx.JSON(http.StatusOK, apitypes.PlanetToJSON(*planet))
+}
+
+func (h *Handler) CreatePlanet(ctx *gin.Context) {
+	var planetJSON apitypes.PlanetJSON
+	if err := ctx.BindJSON(&planetJSON); err != nil {
+		h.errorHandler(ctx, http.StatusBadRequest, err)
+		return
+	}
+	planet, err := h.Repository.CreatePlanet(planetJSON)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.Header("Location", fmt.Sprintf("/reactions/%v", planet.ID))
+	ctx.JSON(http.StatusCreated, apitypes.PlanetToJSON(planet))
 }
 
 
 func (h *Handler) AddPlanetToResearch(ctx *gin.Context) {
-	research, err := h.Repository.GetResearchDraft(h.Repository.GetUser())
+	research, err := h.Repository.GetResearchDraft(h.Repository.GetUserID())
 	researchId := research.ID
 	if err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)

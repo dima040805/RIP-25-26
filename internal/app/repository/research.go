@@ -15,7 +15,7 @@ var errNoDraft = errors.New("no draft for this user")
 
 func (r *Repository) GetPlanetsResearch(id int) ([]ds.PlanetInfo, ds.Research, error) {
 
-	creatorID := r.GetUser()
+	creatorID := r.GetUserID()
 	// пока что мы захардкодили id создателя заявки, в последующем вы сделаете авторизацию и будете получать его из JWT
 
 	var research ds.Research
@@ -91,17 +91,15 @@ func (r *Repository) GetResearchDraft(creatorID int) (ds.Research, error) {
 	return research, nil
 }
 
-func (r *Repository) GetResearchCount() int64 {
-	var researchID uint
+func (r *Repository) GetResearchCount(creatorID int) int64 {
 	var count int64
-	creatorID := 1
 	// пока что мы захардкодили id создателя заявки, в последующем вы сделаете авторизацию и будете получать его из JWT
 
-	err := r.db.Model(&ds.Research{}).Where("creator_id = ? AND status = ?", creatorID, "draft").Select("id").First(&researchID).Error
+	research, err := r.CheckCurrentResearchDraft(creatorID)
 	if err != nil {
 		return 0
 	}
-	err = r.db.Model(&ds.PlanetsResearch{}).Where("research_id = ?", researchID).Count(&count).Error
+	err = r.db.Model(&ds.PlanetsResearch{}).Where("research_id = ?", research.ID).Count(&count).Error
 	if err != nil {
 		logrus.Println("Error counting records in lists_planets:", err)
 	}

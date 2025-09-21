@@ -23,10 +23,21 @@ func NewHandler(r *repository.Repository) *Handler {
 func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.GET("/planets", h.GetPlanets)
 	router.GET("/planet/:id", h.GetPlanet)
-	router.GET("/research/:id", h.ResearchHandler)
+	router.POST("/planet", h.CreatePlanet)
+	// router.PUT("planet/:id", h.Change)
 	router.POST("/planets/:id/add-to-research", h.AddPlanetToResearch)
+
+
+	router.GET("/research/research-cart", h.GetResearchCart)	
+	router.GET("/research/:id", h.ResearchHandler)
 	router.POST("/research/:id/delete-research", h.DeleteResearch)
 
+
+	router.POST("/users/sign-up", h.CreateUser)
+	router.GET("/users/profile", h.GetProfile)
+	router.PUT("/users/profile", h.ChangeProfile)
+	router.POST("/users/sign-in", h.SignIn)
+	router.POST("/users/sign-out", h.SignOut)
 }
 
 func (h *Handler) RegisterStatic(router *gin.Engine) {

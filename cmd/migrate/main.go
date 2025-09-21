@@ -20,7 +20,7 @@ func main() {
 		&ds.Planet{},
 		&ds.PlanetsResearch{},
 		&ds.Research{},
-		&ds.Users{},
+		&ds.User{},
 
 	)
 	if err != nil {
