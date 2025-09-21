@@ -6,6 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"LAB1/internal/app/api_types"
+
 )
 
 
@@ -27,9 +29,8 @@ func (h *Handler) GetResearchCart(ctx *gin.Context){
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"status":          "draft",
-		"reactions_count": planetsCount,
-		"id":              research.ID,
+		"id":          research.ID,
+		"reactions_count": h.Repository.GetResearchCount(research.CreatorID),
 	})
 }
 
@@ -39,15 +40,18 @@ func (h *Handler) ResearchHandler(ctx *gin.Context) {
 	if err != nil {
 		logrus.Error(err)
 	}
-	researchPlanets, research, err := h.Repository.GetPlanetsResearch(id)
+	_, research, err := h.Repository.GetPlanetsResearch(id)
 	if err != nil {
 		h.errorHandler(ctx, http.StatusInternalServerError, err)
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{
-		"researchPlanets": researchPlanets,
-		"research":        research,
-	})
+	creatorLogin, moderatorLogin, err := h.Repository.GetModeratorAndCreatorLogin(research)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, apitypes.ResearchToJSON(research, creatorLogin, moderatorLogin))
 }
 
 func (h *Handler) DeleteResearch(ctx *gin.Context){

@@ -15,16 +15,17 @@ var errNoDraft = errors.New("no draft for this user")
 
 func (r *Repository) GetPlanetsResearch(id int) ([]ds.PlanetInfo, ds.Research, error) {
 
-	creatorID := r.GetUserID()
+	userID := r.GetUserID()
+	user, _ := r.GetUserByID(userID)
 	// пока что мы захардкодили id создателя заявки, в последующем вы сделаете авторизацию и будете получать его из JWT
 
 	var research ds.Research
 	err := r.db.Where("id = ?", id).First(&research).Error
 	if err != nil {
 		return []ds.PlanetInfo{}, ds.Research{}, err
-	} else if creatorID != int(research.CreatorID) {
-		return []ds.PlanetInfo{}, ds.Research{}, errors.New("you are not allowed")
-	} else if research.Status == "deleted" {
+	} else if (userID != int(research.CreatorID)) && (!user.IsModerator){
+		return []ds.PlanetInfo{}, ds.Research{}, errors.New("you are not creator")
+	} else if research.Status == "deleted" && (!user.IsModerator) {
 		return []ds.PlanetInfo{}, ds.Research{}, errors.New("you can`t watch deleted calculations")
 	}
 
@@ -72,7 +73,7 @@ func (r *Repository) CheckCurrentResearchDraft(creatorID int) (ds.Research, erro
 }
 
 
-func (r *Repository) GetResearchDraft(creatorID int) (ds.Research, error) {
+func (r *Repository) GetResearchDraft(creatorID int) (ds.Research, bool, error) {
 	research, err := r.CheckCurrentResearchDraft(creatorID)
 	if err == errNoDraft {
 		research = ds.Research{
@@ -82,13 +83,13 @@ func (r *Repository) GetResearchDraft(creatorID int) (ds.Research, error) {
 		}
 		result := r.db.Create(&research)
 		if result.Error != nil {
-			return ds.Research{}, result.Error
+			return ds.Research{}, false, result.Error
 		}
-		return research, nil
+		return research, true, nil
 	} else if err != nil {
-		return ds.Research{}, err
+		return ds.Research{}, false, err
 	}
-	return research, nil
+	return research, true, nil
 }
 
 func (r *Repository) GetResearchCount(creatorID int) int64 {

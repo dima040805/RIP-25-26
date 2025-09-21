@@ -82,9 +82,49 @@ func (h *Handler) CreatePlanet(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, apitypes.PlanetToJSON(planet))
 }
 
+func (h *Handler) DeletePlanet(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	err = h.Repository.DeletePlanet(id)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "deleted",
+	})
+}
+
+func (h *Handler) ChangePlanet(ctx *gin.Context){
+	var planetJSON apitypes.PlanetJSON
+	if err := ctx.BindJSON(&planetJSON); err != nil {
+		h.errorHandler(ctx, http.StatusBadRequest, err)
+		return
+	}
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	planet, err := h.Repository.ChangePlanet(id, planetJSON)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, apitypes.PlanetToJSON(planet))
+}
 
 func (h *Handler) AddPlanetToResearch(ctx *gin.Context) {
-	research, err := h.Repository.GetResearchDraft(h.Repository.GetUserID())
+	research, created, err := h.Repository.GetResearchDraft(h.Repository.GetUserID())
 	researchId := research.ID
 	if err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
@@ -102,6 +142,18 @@ func (h *Handler) AddPlanetToResearch(ctx *gin.Context) {
 		h.errorHandler(ctx, http.StatusInternalServerError, err)
 		return
 	}
+	
+	status := http.StatusOK
+	
+	if created {
+		ctx.Header("Location", fmt.Sprintf("/research/%v", research.ID))
+		status = http.StatusCreated
+	}
 
-	// ctx.Redirect(http.StatusFound, "/planets")
-}
+	creatorLogin, moderatorLogin, err := h.Repository.GetModeratorAndCreatorLogin(research)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.JSON(status, apitypes.ResearchToJSON(research, creatorLogin, moderatorLogin))}

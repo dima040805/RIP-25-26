@@ -24,14 +24,17 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.GET("/planets", h.GetPlanets)
 	router.GET("/planet/:id", h.GetPlanet)
 	router.POST("/planet", h.CreatePlanet)
-	// router.PUT("planet/:id", h.Change)
-	router.POST("/planets/:id/add-to-research", h.AddPlanetToResearch)
+	router.DELETE("/planet/:id", h.DeletePlanet)
+	router.PUT("planet/:id", h.ChangePlanet)
+	router.POST("/planet/:id/add-to-research", h.AddPlanetToResearch)
 
 
 	router.GET("/research/research-cart", h.GetResearchCart)	
 	router.GET("/research/:id", h.ResearchHandler)
 	router.POST("/research/:id/delete-research", h.DeleteResearch)
 
+	router.DELETE("/planets_research/:planet_id/:research_id", h.DeletePlanetFromResearch)
+	router.PUT("/planets_research/:planet_id/:research_id", h.ChangePlanetResearch)
 
 	router.POST("/users/sign-up", h.CreateUser)
 	router.GET("/users/profile", h.GetProfile)

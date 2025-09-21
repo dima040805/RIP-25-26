@@ -31,8 +31,7 @@ func PlanetToJSON(planet ds.Planet) PlanetJSON {
 func PlanetFromJSON(planetJSON PlanetJSON) ds.Planet {
 	return ds.Planet{
 		IsDelete:  	 planetJSON.IsDelete,  
-		Image:       planetJSON.Image,
-		Name:        planetJSON.Description,
+		Name:        planetJSON.Name,
 		Distance:    planetJSON.Distance,
 		Description: planetJSON.Description,
 		Mass:        planetJSON.Mass,
