@@ -1,7 +1,6 @@
 package repository
 
 import (
-	// apitypes "LAB1/internal/app/api_types"
 	apitypes "LAB1/internal/app/api_types"
 	"LAB1/internal/app/ds"
 	"errors"
@@ -25,18 +24,11 @@ func (r *Repository) DeletePlanetFromResearch(researchId int, planetId int) (ds.
 	return research, nil
 }
 
-// func (r *Repository) GetPlanetsResearch(researchId int) ([]ds.PlanetsResearch, error) {
-// 	var planetsResearch []ds.PlanetsResearch
-// 	err := r.db.Where("research_id = ?", researchId).Find(&planetsResearch).Error
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return planetsResearch, nil
-// }
 
-func (r *Repository) ChangePlanetResearch(reacherId int, planetId int, planetsResearchJSON apitypes.PlanetsResearchJSON) (ds.PlanetsResearch, error) {
+
+func (r *Repository) ChangePlanetResearch(researchId int, planetId int, planetsResearchJSON apitypes.PlanetsResearchJSON) (ds.PlanetsResearch, error) {
 	var planetsResearch ds.PlanetsResearch
-	err := r.db.Model(&planetsResearch).Where("planet_id = ? and research_id = ?", planetId, reacherId).Updates(apitypes.PlanetsResearchFromJSON(planetsResearchJSON)).First(&planetsResearch).Error
+	err := r.db.Model(&planetsResearch).Where("planet_id = ? and research_id = ?", planetId, researchId).Updates(apitypes.PlanetsResearchFromJSON(planetsResearchJSON)).First(&planetsResearch).Error
 	if err != nil {
 		return ds.PlanetsResearch{}, err
 	}

@@ -2,14 +2,13 @@ package apitypes
 
 import (
 	"LAB1/internal/app/ds"
-	"database/sql"
 	"time"
 )
 
 type ResearchJSON struct {
 	ID           	int       		`json:"id"`
 	Status       	string    		`json:"status"`
-	DateResearch 	*time.Time 		`json:"date_research"`               
+	DateResearch 	string 		`json:"date_research"`               
 	DateCreate   	time.Time 		`json:"date_create"`                 
 	CreatorLogin    string       	`json:"creator_login"`           
 	DateForm     	*time.Time 		`json:"date_form"`              
@@ -19,7 +18,7 @@ type ResearchJSON struct {
 }
 
 func ResearchToJSON(research ds.Research, creatorLogin string, moderatorLogin string) ResearchJSON {
-	var dateForm, dateFinish, dateResearch *time.Time
+	var dateForm, dateFinish *time.Time
 	if research.DateForm.Valid {
 		dateForm = &research.DateForm.Time
 	}
@@ -33,16 +32,14 @@ func ResearchToJSON(research ds.Research, creatorLogin string, moderatorLogin st
 		mLogin = &moderatorLogin
 	}
 
-	if research.DateResearch.Valid {
-		dateResearch = &research.DateResearch.Time
-	}
+
 
 
 
 	return ResearchJSON{
 		ID:				research.ID,
 		Status:       	research.Status,
-		DateResearch: 	dateResearch,              
+		DateResearch: 	research.DateResearch,              
 		DateCreate:   	research.DateCreate,                 
 		CreatorLogin:   creatorLogin,           
 		DateForm:     	dateForm,              
@@ -53,14 +50,11 @@ func ResearchToJSON(research ds.Research, creatorLogin string, moderatorLogin st
 
 
 func ResearchFromJSON(research ResearchJSON) ds.Research {
-	if research.DateResearch == nil {
+	if research.DateResearch == "" {
 		return ds.Research{}
 	}
-	DateResearch := sql.NullTime{
-			Time:  *research.DateResearch,
-			Valid: true,}
 	return ds.Research{
-		DateResearch: DateResearch,
+		DateResearch: research.DateResearch,
 	}
 }
 

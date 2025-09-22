@@ -1,14 +1,59 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
+	"time"
+
+	"LAB1/internal/app/api_types"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"LAB1/internal/app/api_types"
-
 )
+
+func (h *Handler) GetResearches(ctx *gin.Context) {
+	fromDate := ctx.Query("from-date")
+	var from = time.Time{}
+	var to = time.Time{}
+	if fromDate != "" {
+		from1, err := time.Parse("2006-01-02", fromDate)
+		if err != nil {
+			h.errorHandler(ctx, http.StatusBadRequest, err)
+			return
+		}
+		from = from1
+	}
+	fmt.Println(fromDate)
+
+	toDate := ctx.Query("to-date")
+	if toDate != "" {
+		to1, err := time.Parse("2006-01-02", toDate)
+		if err != nil {
+			h.errorHandler(ctx, http.StatusBadRequest, err)
+			return
+		}
+		to = to1
+	}
+
+	status := ctx.Query("status")
+
+	researches, err := h.Repository.GetResearches(from, to, status)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+	resp := make([]apitypes.ResearchJSON, 0, len(researches))
+	for _, c := range researches {
+		creatorLogin, moderatorLogin, err := h.Repository.GetModeratorAndCreatorLogin(c)
+		if err != nil {
+			h.errorHandler(ctx, http.StatusInternalServerError, err)
+			return
+		}
+		resp = append(resp, apitypes.ResearchToJSON(c, creatorLogin, moderatorLogin))
+	}
+	ctx.JSON(http.StatusOK, resp)
+}
 
 
 func (h *Handler) GetResearchCart(ctx *gin.Context){
@@ -17,7 +62,7 @@ func (h *Handler) GetResearchCart(ctx *gin.Context){
 	if planetsCount == 0 {
 		ctx.JSON(http.StatusOK, gin.H{
 			"status":          "no_draft",
-			"reactions_count": planetsCount,
+			"planets_count": planetsCount,
 		})
 		return
 	}
@@ -30,21 +75,58 @@ func (h *Handler) GetResearchCart(ctx *gin.Context){
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"id":          research.ID,
-		"reactions_count": h.Repository.GetResearchCount(research.CreatorID),
+		"planets_count": h.Repository.GetResearchCount(research.CreatorID),
 	})
 }
 
-func (h *Handler) ResearchHandler(ctx *gin.Context) {
+func (h *Handler) GetRsearch(ctx *gin.Context) {
 	idStr := ctx.Param("id")
-	id, err := strconv.Atoi(idStr) // так как функция выше возвращает нам строку, нужно ее преобразовать в int
-	if err != nil {
-		logrus.Error(err)
-	}
-	_, research, err := h.Repository.GetPlanetsResearch(id)
+	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		h.errorHandler(ctx, http.StatusInternalServerError, err)
 		return
 	}
+
+	planets, research, err := h.Repository.GetResearchPlanets(id)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	resp := make([]apitypes.PlanetJSON, 0, len(planets))
+	for _, r := range planets {
+		resp = append(resp, apitypes.PlanetToJSON(r))
+	}
+
+	creatorLogin, moderatorLogin, err := h.Repository.GetModeratorAndCreatorLogin(research)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"research": apitypes.ResearchToJSON(research, creatorLogin, moderatorLogin),
+		"planets":   resp,
+	})
+}
+
+func (h *Handler) FormResearch(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	status := "formed"
+
+	research, err := h.Repository.FormResearch(id, status)
+
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
 	creatorLogin, moderatorLogin, err := h.Repository.GetModeratorAndCreatorLogin(research)
 	if err != nil {
 		h.errorHandler(ctx, http.StatusInternalServerError, err)
@@ -54,6 +136,37 @@ func (h *Handler) ResearchHandler(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, apitypes.ResearchToJSON(research, creatorLogin, moderatorLogin))
 }
 
+func (h *Handler) ChangeResearch(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+
+	var researchJSON apitypes.ResearchJSON
+	if err := ctx.BindJSON(&researchJSON); err != nil {
+		h.errorHandler(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	research, err := h.Repository.ChangeResearch(id, researchJSON)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	creatorLogin, moderatorLogin, err := h.Repository.GetModeratorAndCreatorLogin(research)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, apitypes.ResearchToJSON(research, creatorLogin, moderatorLogin))
+}
+
+
 func (h *Handler) DeleteResearch(ctx *gin.Context){
 	idStr := ctx.Param("id")
 	researchId, err := strconv.Atoi(idStr) // так как функция выше возвращает нам строку, нужно ее преобразовать в int
@@ -61,14 +174,46 @@ func (h *Handler) DeleteResearch(ctx *gin.Context){
 		logrus.Error(err)
 	}
 
+	status := "deleted"
 
-	err = h.Repository.DeleteCalculation(researchId)
+	
+	_, err = h.Repository.FormResearch(researchId, status)
+
 	if err != nil {
 		h.errorHandler(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	// ctx.Redirect(http.StatusFound, "/planets")
+	ctx.JSON(http.StatusOK, gin.H{"message": "Research deleted"})
 }
 
 
+func (h *Handler) ModerateResearch(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	var statusJSON apitypes.StatusJSON
+	if err := ctx.BindJSON(&statusJSON); err != nil {
+		h.errorHandler(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	research, err := h.Repository.ModerateResearch(id, statusJSON.Status)
+
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	creatorLogin, moderatorLogin, err := h.Repository.GetModeratorAndCreatorLogin(research)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, apitypes.ResearchToJSON(research, creatorLogin, moderatorLogin))
+}

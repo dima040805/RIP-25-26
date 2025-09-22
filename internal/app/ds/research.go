@@ -9,7 +9,7 @@ import (
 type Research struct {
 	ID           int       `gorm:"primaryKey;autoIncrement"`
 	Status       string    `gorm:"type:varchar(20);not null"` 
-	DateResearch sql.NullTime `gorm:"default:null"`                 
+	DateResearch string `gorm:"default:null"`                 
 	DateCreate   time.Time `gorm:"not null"`                  
 	CreatorID    int       `gorm:"not null"`                 
 	DateForm     sql.NullTime `gorm:"default:null"`                  

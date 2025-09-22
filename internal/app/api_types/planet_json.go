@@ -4,14 +4,14 @@ import "LAB1/internal/app/ds"
 
 type PlanetJSON struct {
 	ID          int 	`json:"id"`
-	IsDelete    bool   	`json:"is_delete"`
-	Image       string 	`json:"image"`
 	Name        string 	`json:"name"`
+	Image       string 	`json:"image"`
 	Distance    int		`json:"distance"`
 	Description string 	`json:"description"`
 	Mass        float64 `json:"mass"`
 	Discovery   int		`json:"discovery"`
 	StarRadius  int		`json:"star_radius"`
+	IsDelete    bool   	`json:"is_delete"`
 }
 
 func PlanetToJSON(planet ds.Planet) PlanetJSON {

@@ -11,20 +11,20 @@ import (
 
 func (h *Handler) DeletePlanetFromResearch(ctx *gin.Context) {
 
-	researchID, err := strconv.Atoi(ctx.Param("research_id"))
+	researchId, err := strconv.Atoi(ctx.Param("research_id"))
 	if err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
 	}
 
-	planetID, err := strconv.Atoi(ctx.Param("planet_id"))
+	planetId, err := strconv.Atoi(ctx.Param("planet_id"))
 	if err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
 	}
 
 
-	research, err := h.Repository.DeletePlanetFromResearch(researchID, planetID)
+	research, err := h.Repository.DeletePlanetFromResearch(researchId, planetId)
 	if err != nil {
 		h.errorHandler(ctx, http.StatusInternalServerError, err)
 		return
@@ -40,7 +40,7 @@ func (h *Handler) DeletePlanetFromResearch(ctx *gin.Context) {
 }
 
 func (h *Handler) ChangePlanetResearch(ctx *gin.Context) {
-	reacherId, err := strconv.Atoi(ctx.Param("research_id"))
+	researchId, err := strconv.Atoi(ctx.Param("research_id"))
 	if err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
@@ -58,7 +58,7 @@ func (h *Handler) ChangePlanetResearch(ctx *gin.Context) {
 		return
 	}
 
-	planetResearch, err := h.Repository.ChangePlanetResearch(reacherId, planetId, planetResearchJSON)
+	planetResearch, err := h.Repository.ChangePlanetResearch(researchId, planetId, planetResearchJSON)
 	if err != nil {
 		h.errorHandler(ctx, http.StatusInternalServerError, err)
 		return

@@ -16,7 +16,7 @@ func (h *Handler) GetPlanets(ctx *gin.Context) {
 	var planets []ds.Planet
 	var err error
 
-	searchQuery := ctx.Query("query")
+	searchQuery := ctx.Query("planet_name")
 	if searchQuery == "" {
 		planets, err = h.Repository.GetPlanets()
 		if err != nil {
