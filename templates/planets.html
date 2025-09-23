@@ -86,7 +86,7 @@
                 {{ range .planets }}
                 <li>         
                     <div class="hds-content-item content-list-item-exoplanet" >
-                        <a href="/planet/{{ .ID }}" class="hds-content-item-thumbnail"><img src= {{ .Image }} style="width: 429.33px; height: 241.68px; object-fit: contain; background: black;"> </a>
+                        <a href="/planet/{{ .ID }}" class="hds-content-item-thumbnail"><img src= "http://localhost:9000/test/{{ .Image }}" style="width: 429.33px; height: 241.68px; object-fit: contain; background: black;"> </a>
                         <div>
                             <a href="/planet/{{ .ID }}" class="hds-content-item-heading">
                                 <div class="hds-a11y-heading-22">{{ .Name }}</div>

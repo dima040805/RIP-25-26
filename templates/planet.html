@@ -73,7 +73,7 @@
     <div class="page-heading-md">{{ .planet.Name }}</div>
     <div class="visualization">
         <!-- <iframe src="https://eyes.nasa.gov/apps/exo/#/planet/{{ .planet.Name }}" allowfullscreen></iframe>  -->
-        <img  src= {{ .planet.Image }} style="width: 1000px; height: 600px; object-fit: contain; background: black;">
+        <img  src= "http://localhost:9000/test/{{ .planet.Image }}" style="width: 1000px; height: 600px; object-fit: contain; background: black;">
     </div>
     <div class="Description">
         {{ .planet.Description }}
