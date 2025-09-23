@@ -3,11 +3,16 @@ package repository
 import (
 	// "database/sql"
 	// "errors"
+	"context"
 	"errors"
 	"fmt"
+	"mime/multipart"
 
 	"LAB1/internal/app/api_types"
 	"LAB1/internal/app/ds"
+	"LAB1/internal/app/minioClient"
+
+	"github.com/gin-gonic/gin"
 )
 
 func (r *Repository) GetPlanets() ([]ds.Planet, error) {
@@ -88,12 +93,12 @@ func (r *Repository) DeletePlanet(id int) error {
 	if err != nil {
 		return err
 	}
-	// if reaction.ImgLink != "" {
-	// 	err = minioInclude.DeleteObject(context.Background(), r.mc, minioInclude.GetImgBucket(), reaction.ImgLink)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
+	if planet.Image != "" {
+		err = minio.DeleteObject(context.Background(), r.mc, minio.GetImgBucket(), planet.Image)
+		if err != nil {
+			return err
+		}
+	}
 
 	err = r.db.Model(&ds.Planet{}).Where("id = ?", id).Update("is_delete", true).Error
 	if err != nil {
@@ -145,4 +150,23 @@ func (r *Repository) GetModeratorAndCreatorLogin(research ds.Research) (string, 
 	}
 	
 	return creator.Login, moderatorLogin, nil
+}
+
+func (r *Repository) UploadImage(ctx *gin.Context, planetId int, file *multipart.FileHeader) ( ds.Planet, error) {
+	planet_, _ := r.GetPlanet(planetId)
+	fileName, err := minio.UploadImage(ctx, r.mc, minio.GetImgBucket(), file, *planet_)
+	if err != nil {
+		return ds.Planet{},err
+	}
+
+	planet, err := r.GetPlanet(planetId)
+	if err != nil {
+		return ds.Planet{}, err
+	}
+	planet.Image = "http://localhost:9000/test/" + fileName
+	err = r.db.Save(&planet).Error
+	if err != nil {
+		return ds.Planet{}, err
+	}
+	return *planet, nil
 }

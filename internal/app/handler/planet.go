@@ -157,3 +157,29 @@ func (h *Handler) AddPlanetToResearch(ctx *gin.Context) {
 	}
 
 	ctx.JSON(status, apitypes.ResearchToJSON(research, creatorLogin, moderatorLogin))}
+
+func (h *Handler) UploadImage(ctx *gin.Context) {
+	planetId, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		h.errorHandler(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	file, err := ctx.FormFile("image")
+	if err != nil {
+		h.errorHandler(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	planet, err := h.Repository.UploadImage(ctx, planetId, file)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "uploaded",
+		"planet": apitypes.PlanetToJSON(planet),
+	})
+}
+

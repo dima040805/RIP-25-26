@@ -1,12 +1,15 @@
 package repository
 
 import (
+	"github.com/minio/minio-go/v7"
+	minioClient "LAB1/internal/app/minioClient"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 type Repository struct {
 	db *gorm.DB
+	mc     *minio.Client
 	userId int
 }
 
@@ -16,8 +19,14 @@ func NewRepository(dsn string) (*Repository, error) {
 		return nil, err
 	}
 
+	mc, err := minioClient.InitMinio()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Repository{
 		db: db,
+		mc: mc,
 		userId: 0,
 	}, nil
 }

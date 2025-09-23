@@ -23,19 +23,20 @@ func NewHandler(r *repository.Repository) *Handler {
 func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.GET("/planets", h.GetPlanets)
 	router.GET("/planet/:id", h.GetPlanet)
-	router.POST("/planet", h.CreatePlanet)
-	router.DELETE("/planet/:id", h.DeletePlanet)
-	router.PUT("planet/:id", h.ChangePlanet)
+	router.POST("/planet/create-planet", h.CreatePlanet)
+	router.DELETE("/planet/:id/delete-planet", h.DeletePlanet)
+	router.PUT("/planet/:id/change-planet", h.ChangePlanet)
 	router.POST("/planet/:id/add-to-research", h.AddPlanetToResearch)
+	router.POST("/planet/:id/create-image", h.UploadImage)
 
 
 	router.GET("/research/research-cart", h.GetResearchCart)	
 	router.GET("/researches", h.GetResearches)
 	router.GET("/research/:id", h.GetRsearch)
-	router.PUT("/research/:id", h.ChangeResearch)
+	router.PUT("/research/:id/change-research", h.ChangeResearch)
 	router.PUT("/research/:id/form", h.FormResearch)
 	router.PUT("/research/:id/finish", h.ModerateResearch)
-	router.POST("/research/:id/delete-research", h.DeleteResearch)
+	router.DELETE("/research/:id/delete-research", h.DeleteResearch)
 
 	router.DELETE("/planets_research/:planet_id/:research_id", h.DeletePlanetFromResearch)
 	router.PUT("/planets_research/:planet_id/:research_id", h.ChangePlanetResearch)

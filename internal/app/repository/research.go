@@ -1,12 +1,12 @@
 package repository
 
 import (
+	"LAB1/internal/app/api_types"
 	"LAB1/internal/app/ds"
 	"database/sql"
 	"errors"
-	"time"
-	"LAB1/internal/app/api_types"
 	"math"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	// "time"
@@ -163,16 +163,17 @@ func (r *Repository) FormResearch(researchId int, status string) (ds.Research, e
 	if research.Status != "draft" {
 		return ds.Research{}, errors.New("this research can not be " + status)
 	}
-	if research.DateResearch == "" {
-		return ds.Research{}, errors.New("you don't write date research")
-	}
-
-	planetsResearch, _ := r.GetPlanetsResearches(research.ID)
-	for _, planetResearch := range planetsResearch {
-			if planetResearch.PlanetShine == 0{
-				return ds.Research{}, errors.New("you don't write planet shine" )			
+		if status != "deleted"{
+			if research.DateResearch == "" {
+				return ds.Research{}, errors.New("you don't write date research")
 			}
-	}
+		planetsResearch, _ := r.GetPlanetsResearches(research.ID)
+		for _, planetResearch := range planetsResearch {
+				if planetResearch.PlanetShine == 0{
+					return ds.Research{}, errors.New("you don't write planet shine" )			
+				}
+		}
+	}	
 
 	err = r.db.Model(&research).Updates(ds.Research{
 		Status: status,
