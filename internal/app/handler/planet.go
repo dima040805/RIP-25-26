@@ -78,7 +78,7 @@ func (h *Handler) CreatePlanet(ctx *gin.Context) {
 		return
 	}
 
-	ctx.Header("Location", fmt.Sprintf("/reactions/%v", planet.ID))
+	ctx.Header("Location", fmt.Sprintf("/planets/%v", planet.ID))
 	ctx.JSON(http.StatusCreated, apitypes.PlanetToJSON(planet))
 }
 

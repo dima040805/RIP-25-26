@@ -163,7 +163,7 @@ func (r *Repository) UploadImage(ctx *gin.Context, planetId int, file *multipart
 	if err != nil {
 		return ds.Planet{}, err
 	}
-	planet.Image = "http://localhost:9000/test/" + fileName
+	planet.Image = fileName
 	err = r.db.Save(&planet).Error
 	if err != nil {
 		return ds.Planet{}, err
