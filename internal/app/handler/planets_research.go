@@ -1,8 +1,9 @@
 package handler
 
-
 import (
 	apitypes "LAB1/internal/app/api_types"
+	"LAB1/internal/app/repository"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -10,7 +11,6 @@ import (
 )
 
 func (h *Handler) DeletePlanetFromResearch(ctx *gin.Context) {
-
 	researchId, err := strconv.Atoi(ctx.Param("research_id"))
 	if err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
@@ -23,10 +23,15 @@ func (h *Handler) DeletePlanetFromResearch(ctx *gin.Context) {
 		return
 	}
 
-
 	research, err := h.Repository.DeletePlanetFromResearch(researchId, planetId)
 	if err != nil {
-		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		if errors.Is(err, repository.ErrNotFound) {
+			h.errorHandler(ctx, http.StatusNotFound, err)
+		} else if errors.Is(err, repository.ErrNotAllowed) {
+			h.errorHandler(ctx, http.StatusForbidden, err)
+		} else {
+			h.errorHandler(ctx, http.StatusInternalServerError, err)
+		}
 		return
 	}
 
@@ -60,10 +65,13 @@ func (h *Handler) ChangePlanetResearch(ctx *gin.Context) {
 
 	planetResearch, err := h.Repository.ChangePlanetResearch(researchId, planetId, planetResearchJSON)
 	if err != nil {
-		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		if errors.Is(err, repository.ErrNotFound) {
+			h.errorHandler(ctx, http.StatusNotFound, err)
+		} else {
+			h.errorHandler(ctx, http.StatusInternalServerError, err)
+		}
 		return
 	}
 
 	ctx.JSON(http.StatusOK, apitypes.PlanetsResearchToJSON(planetResearch))
-
 }

@@ -1,15 +1,16 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	apitypes "LAB1/internal/app/api_types"
 	"LAB1/internal/app/ds"
+	"LAB1/internal/app/repository"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
 
 func (h *Handler) GetPlanets(ctx *gin.Context) {
@@ -20,19 +21,13 @@ func (h *Handler) GetPlanets(ctx *gin.Context) {
 	if searchQuery == "" {
 		planets, err = h.Repository.GetPlanets()
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": err.Error(),
-			})
-			logrus.Error(err)
+			h.errorHandler(ctx, http.StatusInternalServerError, err)
 			return
 		}
 	} else {
 		planets, err = h.Repository.GetPlanetsByName(searchQuery)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": err.Error(),
-			})
-			logrus.Error(err)
+			h.errorHandler(ctx, http.StatusInternalServerError, err)
 			return
 		}
 	}
@@ -45,21 +40,19 @@ func (h *Handler) GetPlanets(ctx *gin.Context) {
 
 func (h *Handler) GetPlanet(ctx *gin.Context) {
 	idStr := ctx.Param("id") 
-	id, err := strconv.Atoi(idStr) // так как функция выше возвращает нам строку, нужно ее преобразовать в int
+	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
-		logrus.Error(err)
+		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
 	}
 
 	planet, err := h.Repository.GetPlanet(id)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
-		logrus.Error(err)
+		if errors.Is(err, repository.ErrNotFound) {
+			h.errorHandler(ctx, http.StatusNotFound, err)
+		} else {
+			h.errorHandler(ctx, http.StatusInternalServerError, err)
+		}
 		return
 	}
 
@@ -92,7 +85,11 @@ func (h *Handler) DeletePlanet(ctx *gin.Context) {
 
 	err = h.Repository.DeletePlanet(id)
 	if err != nil {
-		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		if errors.Is(err, repository.ErrNotFound) {
+			h.errorHandler(ctx, http.StatusNotFound, err)
+		} else {
+			h.errorHandler(ctx, http.StatusInternalServerError, err)
+		}
 		return
 	}
 
@@ -116,7 +113,11 @@ func (h *Handler) ChangePlanet(ctx *gin.Context){
 
 	planet, err := h.Repository.ChangePlanet(id, planetJSON)
 	if err != nil {
-		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		if errors.Is(err, repository.ErrNotFound) {
+			h.errorHandler(ctx, http.StatusNotFound, err)
+		} else {
+			h.errorHandler(ctx, http.StatusInternalServerError, err)
+		}
 		return
 	}
 
@@ -125,11 +126,11 @@ func (h *Handler) ChangePlanet(ctx *gin.Context){
 
 func (h *Handler) AddPlanetToResearch(ctx *gin.Context) {
 	research, created, err := h.Repository.GetResearchDraft(h.Repository.GetUserID())
-	researchId := research.ID
 	if err != nil {
-		h.errorHandler(ctx, http.StatusBadRequest, err)
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
 		return
 	}
+	researchId := research.ID
 
 	planetId, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -139,7 +140,13 @@ func (h *Handler) AddPlanetToResearch(ctx *gin.Context) {
 
 	err = h.Repository.AddPlanetToResearch(int(researchId), planetId)
 	if err != nil {
-		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		if errors.Is(err, repository.ErrNotFound) {
+			h.errorHandler(ctx, http.StatusNotFound, err)
+		} else if errors.Is(err, repository.ErrAlreadyExists) {
+			h.errorHandler(ctx, http.StatusConflict, err)
+		} else {
+			h.errorHandler(ctx, http.StatusInternalServerError, err)
+		}
 		return
 	}
 	
@@ -156,7 +163,8 @@ func (h *Handler) AddPlanetToResearch(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(status, apitypes.ResearchToJSON(research, creatorLogin, moderatorLogin))}
+	ctx.JSON(status, apitypes.ResearchToJSON(research, creatorLogin, moderatorLogin))
+}
 
 func (h *Handler) UploadImage(ctx *gin.Context) {
 	planetId, err := strconv.Atoi(ctx.Param("id"))
@@ -173,7 +181,11 @@ func (h *Handler) UploadImage(ctx *gin.Context) {
 
 	planet, err := h.Repository.UploadImage(ctx, planetId, file)
 	if err != nil {
-		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		if errors.Is(err, repository.ErrNotFound) {
+			h.errorHandler(ctx, http.StatusNotFound, err)
+		} else {
+			h.errorHandler(ctx, http.StatusInternalServerError, err)
+		}
 		return
 	}
 
@@ -182,4 +194,3 @@ func (h *Handler) UploadImage(ctx *gin.Context) {
 		"planet": apitypes.PlanetToJSON(planet),
 	})
 }
-

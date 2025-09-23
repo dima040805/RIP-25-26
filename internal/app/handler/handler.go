@@ -2,9 +2,7 @@ package handler
 
 import (
 	"LAB1/internal/app/repository"
-	// "net/http"
-	// "strconv"
-	// "time"
+	"errors"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -28,7 +26,6 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.PUT("/planet/:id/change-planet", h.ChangePlanet)
 	router.POST("/planet/:id/add-to-research", h.AddPlanetToResearch)
 	router.POST("/planet/:id/create-image", h.UploadImage)
-
 
 	router.GET("/research/research-cart", h.GetResearchCart)	
 	router.GET("/researches", h.GetResearches)
@@ -54,9 +51,24 @@ func (h *Handler) RegisterStatic(router *gin.Engine) {
 
 func (h *Handler) errorHandler(ctx *gin.Context, errorStatusCode int, err error) {
 	logrus.Error(err.Error())
+	
+	// Добавляем более специфичную обработку ошибок
+	var errorMessage string
+	switch {
+	case errors.Is(err, repository.ErrNotFound):
+		errorMessage = "Не найден"
+	case errors.Is(err, repository.ErrAlreadyExists):
+		errorMessage = "Уже существует"
+	case errors.Is(err, repository.ErrNotAllowed):
+		errorMessage = "Доступ запрещен"
+	case errors.Is(err, repository.ErrNoDraft):
+		errorMessage = "Черновик не найден"
+	default:
+		errorMessage = err.Error()
+	}
+	
 	ctx.JSON(errorStatusCode, gin.H{
 		"status":      "error",
-		"description": err.Error(),
+		"description": errorMessage,
 	})
 }
-

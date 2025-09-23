@@ -13,6 +13,7 @@ import (
 	"LAB1/internal/app/minioClient"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func (r *Repository) GetPlanets() ([]ds.Planet, error) {
@@ -32,6 +33,9 @@ func (r *Repository) GetPlanet(id int) (*ds.Planet, error) {
 	planet := ds.Planet{}
 	err := r.db.Order("id").Where("id = ? and is_delete = ?", id, false).First(&planet).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("%w:  планета  с id %d", ErrNotFound, id)
+		}
 		return &ds.Planet{}, err
 	}
 	return &planet, nil
@@ -49,13 +53,10 @@ func (r *Repository) GetPlanetsByName(name string) ([]ds.Planet, error) {
 func (r *Repository) CreatePlanet(planetJSON apitypes.PlanetJSON) (ds.Planet, error) {
 	planet := apitypes.PlanetFromJSON(planetJSON)
 	if planet.StarRadius <= 0 {
-		return ds.Planet{}, errors.New("invalid star radius")
+		return ds.Planet{}, errors.New("неправильный радиус звезды")
 	}
 	if planet.Mass <= 0 {
-		return ds.Planet{}, errors.New("invalid mass")
-	}
-	if planet.Mass <= 0 {
-		return ds.Planet{}, errors.New("invalid mass")
+		return ds.Planet{}, errors.New("нерпавильная масса")
 	}
 	err := r.db.Create(&planet).First(&planet).Error
 	if err != nil {
@@ -67,14 +68,17 @@ func (r *Repository) CreatePlanet(planetJSON apitypes.PlanetJSON) (ds.Planet, er
 func (r *Repository) ChangePlanet(id int, planetJSON apitypes.PlanetJSON) (ds.Planet, error) {
 	planet := ds.Planet{}
 	if id < 0 {
-		return ds.Planet{}, errors.New("invalid id, it must be >= 0")
+		return ds.Planet{}, errors.New("id должно быть >= 0")
 	}
 	err := r.db.Where("id = ? and is_delete = ?", id, false).First(&planet).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ds.Planet{}, fmt.Errorf("%w: планета с id %d", ErrNotFound, id)
+		}
 		return ds.Planet{}, err
 	}
 	if planetJSON.StarRadius <= 0 {
-		return ds.Planet{}, errors.New("invalid star radius")
+		return ds.Planet{}, errors.New("нерпавильный радиус звезды")
 	}
 	err = r.db.Model(&planet).Updates(apitypes.PlanetFromJSON(planetJSON)).Error
 	if err != nil {
@@ -86,11 +90,14 @@ func (r *Repository) ChangePlanet(id int, planetJSON apitypes.PlanetJSON) (ds.Pl
 func (r *Repository) DeletePlanet(id int) error {
 	planet := ds.Planet{}
 	if id < 0 {
-		return errors.New("invalid id, it must be >= 0")
+		return errors.New("id должно быть >= 0")
 	}
 
 	err := r.db.Where("id = ? and is_delete = ?", id, false).First(&planet).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("%w: планета с id %d", ErrNotFound, id)
+		}
 		return err
 	}
 	if planet.Image != "" {
@@ -110,20 +117,27 @@ func (r *Repository) DeletePlanet(id int) error {
 func (r *Repository) AddPlanetToResearch(researchId int, planetId int) error {
 	var planet ds.Planet
 	if err := r.db.First(&planet, planetId).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("%w: planet with id %d", ErrNotFound, planetId)
+		}
 		return err
 	}
 
 	var research ds.Research
 	if err := r.db.First(&research, researchId).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("%w: исследование с id %d", ErrNotFound, researchId)
+		}
 		return err
 	}
+	
 	planetsResearch := ds.PlanetsResearch{}
 	result := r.db.Where("planet_id = ? and research_id = ?", planetId, researchId).Find(&planetsResearch)
 	if result.Error != nil {
 		return result.Error
 	}
 	if result.RowsAffected != 0 {
-		return nil
+		return fmt.Errorf("%w: планета %d уже в исследованиии %d", ErrAlreadyExists, planetId, researchId)
 	}
 	return r.db.Create(&ds.PlanetsResearch{
 		PlanetID:    uint(planetId),
@@ -153,7 +167,11 @@ func (r *Repository) GetModeratorAndCreatorLogin(research ds.Research) (string, 
 }
 
 func (r *Repository) UploadImage(ctx *gin.Context, planetId int, file *multipart.FileHeader) ( ds.Planet, error) {
-	planet_, _ := r.GetPlanet(planetId)
+	planet_, err := r.GetPlanet(planetId)
+	if err != nil {
+		return ds.Planet{}, err
+	}
+	
 	fileName, err := minio.UploadImage(ctx, r.mc, minio.GetImgBucket(), file, *planet_)
 	if err != nil {
 		return ds.Planet{},err

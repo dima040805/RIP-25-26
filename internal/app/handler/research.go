@@ -1,15 +1,16 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
 	"LAB1/internal/app/api_types"
+	"LAB1/internal/app/repository"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
 
 func (h *Handler) GetResearches(ctx *gin.Context) {
@@ -55,7 +56,6 @@ func (h *Handler) GetResearches(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, resp)
 }
 
-
 func (h *Handler) GetResearchCart(ctx *gin.Context){
 	planetsCount := h.Repository.GetResearchCount(h.Repository.GetUserID())
 
@@ -69,7 +69,16 @@ func (h *Handler) GetResearchCart(ctx *gin.Context){
 
 	research, err := h.Repository.CheckCurrentResearchDraft(h.Repository.GetUserID())
 	if err != nil {
-		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		if errors.Is(err, repository.ErrNotAllowed) {
+			h.errorHandler(ctx, http.StatusUnauthorized, err)
+		} else if errors.Is(err, repository.ErrNoDraft) {
+			ctx.JSON(http.StatusOK, gin.H{
+				"status":          "no_draft",
+				"planets_count": 0,
+			})
+		} else {
+			h.errorHandler(ctx, http.StatusInternalServerError, err)
+		}
 		return
 	}
 
@@ -83,13 +92,19 @@ func (h *Handler) GetRsearch(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
 	}
 
 	planets, research, err := h.Repository.GetResearchPlanets(id)
 	if err != nil {
-		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		if errors.Is(err, repository.ErrNotFound) {
+			h.errorHandler(ctx, http.StatusNotFound, err)
+		} else if errors.Is(err, repository.ErrNotAllowed) {
+			h.errorHandler(ctx, http.StatusForbidden, err)
+		} else {
+			h.errorHandler(ctx, http.StatusInternalServerError, err)
+		}
 		return
 	}
 
@@ -114,16 +129,21 @@ func (h *Handler) FormResearch(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
 	}
 
 	status := "formed"
 
 	research, err := h.Repository.FormResearch(id, status)
-
 	if err != nil {
-		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		if errors.Is(err, repository.ErrNotFound) {
+			h.errorHandler(ctx, http.StatusNotFound, err)
+		} else if errors.Is(err, repository.ErrNotAllowed) {
+			h.errorHandler(ctx, http.StatusForbidden, err)
+		} else {
+			h.errorHandler(ctx, http.StatusInternalServerError, err)
+		}
 		return
 	}
 
@@ -140,10 +160,9 @@ func (h *Handler) ChangeResearch(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
 	}
-
 
 	var researchJSON apitypes.ResearchJSON
 	if err := ctx.BindJSON(&researchJSON); err != nil {
@@ -153,7 +172,11 @@ func (h *Handler) ChangeResearch(ctx *gin.Context) {
 
 	research, err := h.Repository.ChangeResearch(id, researchJSON)
 	if err != nil {
-		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		if errors.Is(err, repository.ErrNotFound) {
+			h.errorHandler(ctx, http.StatusNotFound, err)
+		} else {
+			h.errorHandler(ctx, http.StatusInternalServerError, err)
+		}
 		return
 	}
 
@@ -166,33 +189,36 @@ func (h *Handler) ChangeResearch(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, apitypes.ResearchToJSON(research, creatorLogin, moderatorLogin))
 }
 
-
 func (h *Handler) DeleteResearch(ctx *gin.Context){
 	idStr := ctx.Param("id")
-	researchId, err := strconv.Atoi(idStr) // так как функция выше возвращает нам строку, нужно ее преобразовать в int
+	researchId, err := strconv.Atoi(idStr)
 	if err != nil {
-		logrus.Error(err)
+		h.errorHandler(ctx, http.StatusBadRequest, err)
+		return
 	}
 
 	status := "deleted"
-
 	
 	_, err = h.Repository.FormResearch(researchId, status)
-
 	if err != nil {
-		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		if errors.Is(err, repository.ErrNotFound) {
+			h.errorHandler(ctx, http.StatusNotFound, err)
+		} else if errors.Is(err, repository.ErrNotAllowed) {
+			h.errorHandler(ctx, http.StatusForbidden, err)
+		} else {
+			h.errorHandler(ctx, http.StatusInternalServerError, err)
+		}
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "Research deleted"})
 }
 
-
 func (h *Handler) ModerateResearch(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
 	}
 
@@ -203,9 +229,14 @@ func (h *Handler) ModerateResearch(ctx *gin.Context) {
 	}
 
 	research, err := h.Repository.ModerateResearch(id, statusJSON.Status)
-
 	if err != nil {
-		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		if errors.Is(err, repository.ErrNotFound) {
+			h.errorHandler(ctx, http.StatusNotFound, err)
+		} else if errors.Is(err, repository.ErrNotAllowed) {
+			h.errorHandler(ctx, http.StatusForbidden, err)
+		} else {
+			h.errorHandler(ctx, http.StatusInternalServerError, err)
+		}
 		return
 	}
 
