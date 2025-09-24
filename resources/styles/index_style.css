@@ -186,7 +186,6 @@ margin-top: 16px;
     border-radius: 50%;
     box-shadow: 0 0 16px #0000001a;
     position: fixed;
-    bottom: 16px;
     left: 16px;
     z-index: 100;
     overflow: visible; 

@@ -72,6 +72,13 @@
 
         
     <main>
+        <a href="/research/{{ .researchId }}">
+        <div class="icon-container">
+            <span class="counter-overlay count root_icon_top">{{ .researchCount }}</span>
+            <img src="/static/img/Telescope.png" alt="Telescope" class="root_icon_top">
+
+        </div>
+        </a>
         <div class="d-grid gap-4 mb-3" style="margin-top: 30px;">
             <form action="/planets" method="GET" style="margin-bottom: 16px;">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -113,13 +120,7 @@
                 </img>
         {{ else }}
 
-        <a href="/research/{{ .researchId }}">
-        <div class="icon-container">
-            <span class="counter-overlay count root_icon_top">{{ .researchCount }}</span>
-            <img src="/static/img/Telescope.png" alt="Telescope" class="root_icon_top">
 
-        </div>
-        </a>
 
         {{ end }}
     </main>
