@@ -62,21 +62,21 @@ func (r *Repository) CreateUser(userJSON apitypes.UserJSON) (ds.User, error) {
 		return ds.User{}, err
 	}
 
-	// Проверка прав для создания модератора
-	if user.IsModerator {
-		currentUserID := r.GetUserID()
-		if currentUserID == 0 {
-			return ds.User{}, fmt.Errorf("%w: требуется аутентификация для создания модератора", ErrNotAllowed)
-		}
+	// // Проверка прав для создания модератора
+	// if user.IsModerator {
+	// 	currentUserID := r.GetUserID()
+	// 	if currentUserID == 0 {
+	// 		return ds.User{}, fmt.Errorf("%w: требуется аутентификация для создания модератора", ErrNotAllowed)
+	// 	}
 		
-		currentUser, err := r.GetUserByID(currentUserID)
-		if err != nil {
-			return ds.User{}, err
-		}
-		if !currentUser.IsModerator {
-			return ds.User{}, fmt.Errorf("%w: только модераторы могут создавать учетные записи модераторов", ErrNotAllowed)
-		}
-	}
+	// 	currentUser, err := r.GetUserByID(currentUserID)
+	// 	if err != nil {
+	// 		return ds.User{}, err
+	// 	}
+	// 	if !currentUser.IsModerator {
+	// 		return ds.User{}, fmt.Errorf("%w: только модераторы могут создавать учетные записи модераторов", ErrNotAllowed)
+	// 	}
+	// }
 
 	// Создание пользователя
 	err = r.db.Create(&user).Error
