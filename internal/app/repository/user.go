@@ -17,9 +17,9 @@ func (r *Repository) GetUserByID(id int) (ds.User, error) {
 	
 	err := r.db.Where("id = ?", id).First(&user).Error
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ds.User{}, fmt.Errorf("%w: пользователь с id %d не найден", ErrNotFound, id)
-		}
+		// if errors.Is(err, gorm.ErrRecordNotFound) {
+		// 	return ds.User{}, fmt.Errorf("%w: пользователь с id %d не найден", ErrNotFound, id)
+		// }
 		return ds.User{}, err
 	}
 	return user, nil

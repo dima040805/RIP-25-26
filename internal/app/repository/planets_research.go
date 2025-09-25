@@ -10,18 +10,18 @@ import (
 )
 
 func (r *Repository) DeletePlanetFromResearch(researchId int, planetId int) (ds.Research, error) {
-	userId := r.userId
-    if userId == 0 {
-        return ds.Research{}, fmt.Errorf("%w: пользователь не авторизирован", ErrNotAllowed)
-    }
+	// userId := r.userId
+    // if userId == 0 {
+    //     return ds.Research{}, fmt.Errorf("%w: пользователь не авторизирован", ErrNotAllowed)
+    // }
     
-	user, err := r.GetUserByID(userId)
-	if err != nil {
-		return ds.Research{}, err
-	}
+	// user, err := r.GetUserByID(userId)
+	// if err != nil {
+	// 	return ds.Research{}, err
+	// }
     
 	var research ds.Research
-	err = r.db.Where("id = ?", researchId).First(&research).Error
+	err := r.db.Where("id = ?", researchId).First(&research).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return ds.Research{}, fmt.Errorf("%w: исследование с id %d", ErrNotFound, researchId)
@@ -29,9 +29,9 @@ func (r *Repository) DeletePlanetFromResearch(researchId int, planetId int) (ds.
 		return ds.Research{}, err
 	}
     
-	if research.CreatorID != r.userId && !user.IsModerator{
-		return ds.Research{}, fmt.Errorf("%w: Вы не создатель этого исследования", ErrNotAllowed)
-	}
+	// if research.CreatorID != r.userId && !user.IsModerator{
+	// 	return ds.Research{}, fmt.Errorf("%w: Вы не создатель этого исследования", ErrNotAllowed)
+	// }
     
 	err = r.db.Where("planet_id = ? and Research_id = ?", planetId, researchId).Delete(&ds.PlanetsResearch{}).Error
 	if err != nil {

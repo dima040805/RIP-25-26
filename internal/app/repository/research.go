@@ -73,9 +73,9 @@ func (r *Repository) GetResearchPlanets(id int) ([]ds.Planet, ds.Research, error
 }
 
 func (r *Repository) CheckCurrentResearchDraft(creatorID int) (ds.Research, error) {
-    if creatorID == 0 {
-        return ds.Research{}, fmt.Errorf("%w: user not authenticated", ErrNotAllowed)
-    }
+    // if creatorID == 0 {
+    //     return ds.Research{}, fmt.Errorf("%w: user not authenticated", ErrNotAllowed)
+    // }
     
 	var research ds.Research
 	res := r.db.Where("creator_id = ? AND status = ?", creatorID, "draft").Limit(1).Find(&research)
@@ -88,9 +88,9 @@ func (r *Repository) CheckCurrentResearchDraft(creatorID int) (ds.Research, erro
 }
 
 func (r *Repository) GetResearchDraft(creatorID int) (ds.Research, bool, error) {
-    if creatorID == 0 {
-        return ds.Research{}, false, fmt.Errorf("%w: user not authenticated", ErrNotAllowed)
-    }
+    // if creatorID == 0 {
+    //     return ds.Research{}, false, fmt.Errorf("%w: user not authenticated", ErrNotAllowed)
+    // }
     
 	research, err := r.CheckCurrentResearchDraft(creatorID)
 	if errors.Is(err, ErrNoDraft) {
@@ -137,24 +137,24 @@ func (r *Repository) GetSingleResearch(id int) (ds.Research, error) {
 		return ds.Research{}, errors.New("неверное id, должно быть >= 0")
 	}
     
-    userId := r.GetUserID()
-    if userId == 0 {
-        return ds.Research{}, fmt.Errorf("%w: пользователь не авторизирован", ErrNotAllowed)
-    }
+    // userId := r.GetUserID()
+    // if userId == 0 {
+    //     return ds.Research{}, fmt.Errorf("%w: пользователь не авторизирован", ErrNotAllowed)
+    // }
     
-	user, err := r.GetUserByID(userId)
-	if err != nil {
-		return ds.Research{}, err
-	}
+	// user, err := r.GetUserByID(userId)
+	// if err != nil {
+	// 	return ds.Research{}, err
+	// }
     
 	var research ds.Research
-	err = r.db.Where("id = ?", id).First(&research).Error
+	err := r.db.Where("id = ?", id).First(&research).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return ds.Research{}, fmt.Errorf("%w: заявка с id %d", ErrNotFound, id)
 		}
 		return ds.Research{}, err
-	} else if research.Status == "deleted" && !user.IsModerator {
+	} else if research.Status == "deleted"  {
 		return ds.Research{}, fmt.Errorf("%w: заявка удалена", ErrNotAllowed)
 	}
 	return research, nil
@@ -166,14 +166,14 @@ func (r *Repository) FormResearch(researchId int, status string) (ds.Research, e
 		return ds.Research{}, err
 	}
 
-	user, err := r.GetUserByID(r.GetUserID())
-	if err != nil{
-		return ds.Research{}, fmt.Errorf("%w: пользователь на авторизирован", ErrNotAllowed)
-	}
+	// user, err := r.GetUserByID(r.GetUserID())
+	// if err != nil{
+	// 	return ds.Research{}, fmt.Errorf("%w: пользователь на авторизирован", ErrNotAllowed)
+	// }
 
-	if research.CreatorID != r.userId && !user.IsModerator{
-		return ds.Research{}, fmt.Errorf("%w: у вас нет прав чтобы эта заявка имела статус %s", ErrNotAllowed, status)
-	}
+	// if research.CreatorID != r.userId && !user.IsModerator{
+	// 	return ds.Research{}, fmt.Errorf("%w: у вас нет прав чтобы эта заявка имела статус %s", ErrNotAllowed, status)
+	// }
 
 	if research.Status != "draft" {
 		return ds.Research{}, fmt.Errorf("эта заявка не может быть %s", status)
@@ -181,12 +181,12 @@ func (r *Repository) FormResearch(researchId int, status string) (ds.Research, e
 	
 	if status != "deleted"{
 		if research.DateResearch == "" {
-			return ds.Research{}, errors.New("выне написали дату исследования")
+			return ds.Research{}, errors.New("вы не написали дату исследования")
 		}
 		planetsResearch, _ := r.GetPlanetsResearches(research.ID)
 		for _, planetResearch := range planetsResearch {
 				if planetResearch.PlanetShine == 0{
-					return ds.Research{}, errors.New("выне написали блеск планеты" )			
+					return ds.Research{}, errors.New("вы не написали блеск планеты" )			
 				}
 		}
 	}	
