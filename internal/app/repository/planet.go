@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"LAB1/internal/app/ds"
-
 )
 
 func (r *Repository) GetPlanets() ([]ds.Planet, error) {
@@ -86,4 +85,5 @@ func (r *Repository) AddPlanetToResearch(researchId int, planetId int) error {
 		PlanetID:    uint(planetId),
 		ResearchID: uint(researchId),
 	}).Error
+
 }

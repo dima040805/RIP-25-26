@@ -7,7 +7,7 @@ import (
 
 type Research struct {
 	ID           uint   `gorm:"primaryKey"`
-	DateResearch time.Time
+	DateResearch sql.NullTime `gorm:"default:null"`
 	Status       string `gorm:"type:varchar(15);not null"`
 	DateCreate   time.Time `gorm:"not null"`
 	DateForm    sql.NullTime  `gorm:"default:null"`

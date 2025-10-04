@@ -2,6 +2,7 @@ package repository
 
 import (
 	"LAB1/internal/app/ds"
+	"database/sql"
 	"errors"
 	"time"
 
@@ -79,6 +80,7 @@ func (r *Repository) GetResearchDraft(creatorID int) (ds.Research, error) {
 			Status:     "draft",
 			CreatorID:  creatorID,
 			DateCreate: time.Now(),
+			DateResearch: sql.NullTime{Valid: false},
 		}
 		result := r.db.Create(&research)
 		if result.Error != nil {
