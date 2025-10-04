@@ -119,9 +119,17 @@ func (h *Handler) GetRsearch(ctx *gin.Context) {
 		return
 	}
 
+	planetsResearch, _ := h.Repository.GetPlanetsResearches(research.ID)
+	
+	resp2 := make([]apitypes.PlanetsResearchJSON, 0, len(planetsResearch))
+	for _, r := range planetsResearch {
+		resp2 = append(resp2, apitypes.PlanetsResearchToJSON(r))
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
 		"research": apitypes.ResearchToJSON(research, creatorLogin, moderatorLogin),
 		"planets":   resp,
+		"planetsResearch": resp2,
 	})
 }
 
