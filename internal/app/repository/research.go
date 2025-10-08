@@ -9,11 +9,11 @@ import (
 	"math"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
-var errNoDraft = errors.New("no draft for this user")
 
 func (r *Repository) GetResearches(from, to time.Time, status string) ([]ds.Research, error) {
 	var researches []ds.Research
@@ -72,7 +72,7 @@ func (r *Repository) GetResearchPlanets(id int) ([]ds.Planet, ds.Research, error
 	return planets, research, nil
 }
 
-func (r *Repository) CheckCurrentResearchDraft(creatorID int) (ds.Research, error) {
+func (r *Repository) CheckCurrentResearchDraft(creatorID uuid.UUID) (ds.Research, error) {
     // if creatorID == 0 {
     //     return ds.Research{}, fmt.Errorf("%w: user not authenticated", ErrNotAllowed)
     // }
@@ -87,7 +87,7 @@ func (r *Repository) CheckCurrentResearchDraft(creatorID int) (ds.Research, erro
 	return research, nil
 }
 
-func (r *Repository) GetResearchDraft(creatorID int) (ds.Research, bool, error) {
+func (r *Repository) GetResearchDraft(creatorID uuid.UUID) (ds.Research, bool, error) {
     // if creatorID == 0 {
     //     return ds.Research{}, false, fmt.Errorf("%w: user not authenticated", ErrNotAllowed)
     // }
@@ -110,10 +110,7 @@ func (r *Repository) GetResearchDraft(creatorID int) (ds.Research, bool, error) 
 	return research, true, nil
 }
 
-func (r *Repository) GetResearchCount(creatorID int) int64 {
-    if creatorID == 0 {
-        return 0
-    }
+func (r *Repository) GetResearchCount(creatorID uuid.UUID) int64 {
     
 	var count int64
 	research, err := r.CheckCurrentResearchDraft(creatorID)
@@ -166,14 +163,6 @@ func (r *Repository) FormResearch(researchId int, status string) (ds.Research, e
 		return ds.Research{}, err
 	}
 
-	// user, err := r.GetUserByID(r.GetUserID())
-	// if err != nil{
-	// 	return ds.Research{}, fmt.Errorf("%w: пользователь на авторизирован", ErrNotAllowed)
-	// }
-
-	// if research.CreatorID != r.userId && !user.IsModerator{
-	// 	return ds.Research{}, fmt.Errorf("%w: у вас нет прав чтобы эта заявка имела статус %s", ErrNotAllowed, status)
-	// }
 
 	if research.Status != "draft" {
 		return ds.Research{}, fmt.Errorf("эта заявка не может быть %s", status)
@@ -237,25 +226,16 @@ func CalculatePlanetRadius(starRadius int, dateResearch string, planetShine floa
 	return float64(starRadius) * math.Sqrt(float64(planetShine / 100)) , nil
 }
 
-func (r *Repository) ModerateResearch(id int, status string) (ds.Research, error) {
+func (r *Repository) ModerateResearch(id int, status string, currUserId uuid.UUID) (ds.Research, error) {
 	if status != "completed" && status != "rejected" {
 		return ds.Research{}, errors.New("неверный статус")
-	}
-
-	user, err := r.GetUserByID(r.GetUserID())
-	if err != nil {
-		return ds.Research{}, err
-	}
-
-	if !user.IsModerator {
-		return ds.Research{}, fmt.Errorf("%w: вы не модератор", ErrNotAllowed)
 	}
 
 	research, err := r.GetSingleResearch(id)
 	if err != nil {
 		return ds.Research{}, err
 	} else if research.Status != "formed" {
-		return ds.Research{}, fmt.Errorf("это исследование не может быть %s", status)
+		return ds.Research{}, errors.New("this calculation can not be " + status)
 	}
 
 	err = r.db.Model(&research).Updates(ds.Research{
@@ -264,12 +244,12 @@ func (r *Repository) ModerateResearch(id int, status string) (ds.Research, error
 			Time:  time.Now(),
 			Valid: true,
 		},
-		ModeratorID: sql.NullInt64{
-			Int64: int64(user.ID),
+		ModeratorID: uuid.NullUUID{
+			UUID:  currUserId,
 			Valid: true,
 		},
 	}).Error
-	if err != nil {
+		if err != nil {
 		return ds.Research{}, err
 	}
 
@@ -298,3 +278,4 @@ func (r *Repository) ModerateResearch(id int, status string) (ds.Research, error
 
 	return research, nil
 }
+

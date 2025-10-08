@@ -1,0 +1,978 @@
+basePath: /api/v1
+definitions:
+  apitypes.PlanetJSON:
+    properties:
+      description:
+        type: string
+      discovery:
+        type: integer
+      distance:
+        type: integer
+      id:
+        type: integer
+      image:
+        type: string
+      is_delete:
+        type: boolean
+      mass:
+        type: number
+      name:
+        type: string
+      star_radius:
+        type: integer
+    type: object
+  apitypes.PlanetsResearchJSON:
+    properties:
+      id:
+        type: integer
+      planet_id:
+        type: integer
+      planet_radius:
+        type: integer
+      planet_shine:
+        type: number
+      research_id:
+        type: integer
+    type: object
+  apitypes.ResearchJSON:
+    properties:
+      creator_login:
+        type: string
+      date_create:
+        type: string
+      date_finish:
+        type: string
+      date_form:
+        type: string
+      date_research:
+        type: string
+      id:
+        type: integer
+      moderator_login:
+        type: string
+      status:
+        type: string
+    type: object
+  apitypes.StatusJSON:
+    properties:
+      status:
+        type: string
+    type: object
+  apitypes.UserJSON:
+    properties:
+      id:
+        type: string
+      is_moderator:
+        type: boolean
+      login:
+        type: string
+      password:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API для управления исследованиями планет
+  title: Planets Research API
+  version: "1.0"
+paths:
+  /planet/{id}:
+    get:
+      description: Возвращает информацию о планете по её идентификатору
+      parameters:
+      - description: ID планеты
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Данные планеты
+          schema:
+            $ref: '#/definitions/apitypes.PlanetJSON'
+        "400":
+          description: Неверный ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Планета не найдена
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить планету по ID
+      tags:
+      - planets
+  /planet/{id}/add-to-research:
+    post:
+      description: Добавляет планету в черновик исследования пользователя
+      parameters:
+      - description: ID планеты
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Исследование с добавленной планетой
+          schema:
+            $ref: '#/definitions/apitypes.ResearchJSON'
+        "201":
+          description: Создано новое исследование
+          schema:
+            $ref: '#/definitions/apitypes.ResearchJSON'
+        "400":
+          description: Неверный запрос
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Планета не найдена
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Планета уже в исследовании
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Добавить планету в исследование
+      tags:
+      - planets
+  /planet/{id}/change-planet:
+    put:
+      consumes:
+      - application/json
+      description: Обновляет информацию о планете по ID
+      parameters:
+      - description: ID планеты
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Новые данные планеты
+        in: body
+        name: planet
+        required: true
+        schema:
+          $ref: '#/definitions/apitypes.PlanetJSON'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Обновленная планета
+          schema:
+            $ref: '#/definitions/apitypes.PlanetJSON'
+        "400":
+          description: Неверные данные
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Планета не найдена
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Изменить данные планеты
+      tags:
+      - planets
+  /planet/{id}/create-image:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Загружает изображение для планеты и возвращает обновленные данные
+      parameters:
+      - description: ID планеты
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Изображение планеты
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Статус загрузки и данные планеты
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Неверный запрос или файл
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Планета не найдена
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Загрузить изображение для планеты
+      tags:
+      - planets
+  /planet/{id}/delete-planet:
+    delete:
+      description: Выполняет логическое удаление планеты по ID
+      parameters:
+      - description: ID планеты
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Статус удаления
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Неверный ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Планета не найдена
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Удалить планету
+      tags:
+      - planets
+  /planet/create-planet:
+    post:
+      consumes:
+      - application/json
+      description: Создает новую планету и возвращает её данные
+      parameters:
+      - description: Данные новой планеты
+        in: body
+        name: planet
+        required: true
+        schema:
+          $ref: '#/definitions/apitypes.PlanetJSON'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Созданная планета
+          schema:
+            $ref: '#/definitions/apitypes.PlanetJSON'
+        "400":
+          description: Неверные данные
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Создать новую планету
+      tags:
+      - planets
+  /planets:
+    get:
+      description: Возвращает все планеты или фильтрует по названию
+      parameters:
+      - description: Название планеты для поиска
+        in: query
+        name: planet_name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список планет
+          schema:
+            items:
+              $ref: '#/definitions/apitypes.PlanetJSON'
+            type: array
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить список планет
+      tags:
+      - planets
+  /planets_research/{planet_id}/{research_id}:
+    delete:
+      description: Удаляет связь планеты и исследования
+      parameters:
+      - description: ID планеты
+        in: path
+        name: planet_id
+        required: true
+        type: integer
+      - description: ID исследования
+        in: path
+        name: research_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Обновленное исследование
+          schema:
+            $ref: '#/definitions/apitypes.ResearchJSON'
+        "400":
+          description: Неверные ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Доступ запрещен
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Не найдено
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Удалить планету из исследования
+      tags:
+      - planets-research
+    put:
+      consumes:
+      - application/json
+      description: Обновляет параметры планеты в конкретном исследовании
+      parameters:
+      - description: ID планеты
+        in: path
+        name: planet_id
+        required: true
+        type: integer
+      - description: ID исследования
+        in: path
+        name: research_id
+        required: true
+        type: integer
+      - description: Новые данные
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/apitypes.PlanetsResearchJSON'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Обновленные данные
+          schema:
+            $ref: '#/definitions/apitypes.PlanetsResearchJSON'
+        "400":
+          description: Неверные данные
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Не найдено
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Изменить данные планеты в исследовании
+      tags:
+      - planets-research
+  /research/{id}:
+    get:
+      description: Возвращает полную информацию об исследовании включая планеты
+      parameters:
+      - description: ID исследования
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Данные исследования с планетами
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Неверный ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Доступ запрещен
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Исследование не найдено
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Получить исследование по ID
+      tags:
+      - researches
+  /research/{id}/change-research:
+    put:
+      consumes:
+      - application/json
+      description: Обновляет данные исследования
+      parameters:
+      - description: ID исследования
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Новые данные исследования
+        in: body
+        name: research
+        required: true
+        schema:
+          $ref: '#/definitions/apitypes.ResearchJSON'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Обновленное исследование
+          schema:
+            $ref: '#/definitions/apitypes.ResearchJSON'
+        "400":
+          description: Неверные данные
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Исследование не найдено
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Изменить исследование
+      tags:
+      - researches
+  /research/{id}/delete-research:
+    delete:
+      description: Выполняет логическое удаление исследования
+      parameters:
+      - description: ID исследования
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Статус удаления
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Неверный запрос
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Доступ запрещен
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Исследование не найдено
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Удалить исследование
+      tags:
+      - researches
+  /research/{id}/finish:
+    put:
+      consumes:
+      - application/json
+      description: Изменяет статус исследования (только для модераторов)
+      parameters:
+      - description: ID исследования
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Новый статус
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/apitypes.StatusJSON'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Результат модерации
+          schema:
+            $ref: '#/definitions/apitypes.ResearchJSON'
+        "400":
+          description: Неверный запрос
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Доступ запрещен
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Исследование не найдено
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Модерировать исследование
+      tags:
+      - researches
+  /research/{id}/form:
+    put:
+      description: Переводит исследование в статус "formed"
+      parameters:
+      - description: ID исследования
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Сформированное исследование
+          schema:
+            $ref: '#/definitions/apitypes.ResearchJSON'
+        "400":
+          description: Неверный запрос
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Доступ запрещен
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Исследование не найдено
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Сформировать исследование
+      tags:
+      - researches
+  /research/research-cart:
+    get:
+      description: Возвращает информацию о текущем черновике исследования пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Данные корзины исследования
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Неверный запрос
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Получить корзину исследования
+      tags:
+      - researches
+  /researches:
+    get:
+      description: Возвращает исследования с возможностью фильтрации по датам и статусу
+      parameters:
+      - description: Начальная дата (YYYY-MM-DD)
+        in: query
+        name: from-date
+        type: string
+      - description: Конечная дата (YYYY-MM-DD)
+        in: query
+        name: to-date
+        type: string
+      - description: Статус исследования
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список исследований
+          schema:
+            items:
+              $ref: '#/definitions/apitypes.ResearchJSON'
+            type: array
+        "400":
+          description: Неверный формат даты
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Получить список исследований
+      tags:
+      - researches
+  /users/sign-in:
+    post:
+      consumes:
+      - application/json
+      description: Принимает логин/пароль, возвращает jwt-токен в формате {"token":"..."}.
+      parameters:
+      - description: Логин и пароль
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/apitypes.UserJSON'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: token
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Неверный запрос
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Пользователь не найден
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Вход (получение токена)
+      tags:
+      - users
+  /users/sign-out:
+    post:
+      description: Удаляет токен текущего пользователя из хранилища. Возвращает {"status":"signed_out"}.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: status
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Проблема с получением user_id
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Внутренняя ошибка при удалении токена
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Выход (удаление токена)
+      tags:
+      - users
+  /users/sign-up:
+    post:
+      consumes:
+      - application/json
+      description: Регистрирует нового пользователя. Возвращает URL созданного ресурса в Location и тело созданного пользователя.
+      parameters:
+      - description: Параметры нового пользователя
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/apitypes.UserJSON'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Пользователь создан
+          schema:
+            $ref: '#/definitions/apitypes.UserJSON'
+        "400":
+          description: Ошибка валидации или входных данных
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Регистрация пользователя
+      tags:
+      - users
+  /users/{login}/profile:
+    get:
+      description: Возвращает данные профиля (доступен только тот, чей UUID совпадает с user_id в токене).
+      parameters:
+      - description: Логин пользователя
+        in: path
+        name: login
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Профиль пользователя
+          schema:
+            $ref: '#/definitions/apitypes.UserJSON'
+        "400":
+          description: Проблема с авторизацией/получением user_id"}
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Пользователи не совпадают
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Пользователь не найден
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Получить профиль пользователя
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Обновляет профиль пользователя (может делать только сам пользователь).
+      parameters:
+      - description: Логин пользователя
+        in: path
+        name: login
+        required: true
+        type: string
+      - description: Новые данные профиля
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/apitypes.UserJSON'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Обновлённый профиль
+          schema:
+            $ref: '#/definitions/apitypes.UserJSON'
+        "400":
+          description: Ошибка запроса или авторизации
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Доступ запрещён
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Пользователь не найден
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Изменить профиль пользователя
+      tags:
+      - users
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

@@ -156,7 +156,7 @@ func (r *Repository) GetModeratorAndCreatorLogin(research ds.Research) (string, 
 
 	var moderatorLogin string
 	if research.ModeratorID.Valid {
-		err = r.db.Where("id = ?", research.ModeratorID.Int64).First(&moderator).Error
+		err = r.db.Where("id = ?", research.ModeratorID).First(&moderator).Error
 		if err != nil {
 			return "", "", err
 		}

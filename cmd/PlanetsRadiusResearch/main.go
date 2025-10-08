@@ -12,6 +12,7 @@ import (
 	"LAB1/internal/app/handler"
 	"LAB1/internal/app/repository"
 	"LAB1/internal/pkg"
+	_ "LAB1/docs"
 )
 
 func main() {

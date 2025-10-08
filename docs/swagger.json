@@ -1,0 +1,1512 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "API для управления исследованиями планет",
+    "title": "Planets Research API",
+    "contact": {},
+    "version": "1.0"
+  },
+  "host": "localhost:8080",
+  "basePath": "/api/v1",
+  "paths": {
+    "/planet/{id}": {
+      "get": {
+        "description": "Возвращает информацию о планете по её идентификатору",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "planets"
+        ],
+        "summary": "Получить планету по ID",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID планеты",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Данные планеты",
+            "schema": {
+              "$ref": "#/definitions/apitypes.PlanetJSON"
+            }
+          },
+          "400": {
+            "description": "Неверный ID",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "Планета не найдена",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/planet/{id}/add-to-research": {
+      "post": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Добавляет планету в черновик исследования пользователя",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "planets"
+        ],
+        "summary": "Добавить планету в исследование",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID планеты",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Исследование с добавленной планетой",
+            "schema": {
+              "$ref": "#/definitions/apitypes.ResearchJSON"
+            }
+          },
+          "201": {
+            "description": "Создано новое исследование",
+            "schema": {
+              "$ref": "#/definitions/apitypes.ResearchJSON"
+            }
+          },
+          "400": {
+            "description": "Неверный запрос",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "Планета не найдена",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "409": {
+            "description": "Планета уже в исследовании",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/planet/{id}/change-planet": {
+      "put": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Обновляет информацию о планете по ID",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "planets"
+        ],
+        "summary": "Измененить данные планеты",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID планеты",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "Новые данные планеты",
+            "name": "planet",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apitypes.PlanetJSON"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Обновленная планета",
+            "schema": {
+              "$ref": "#/definitions/apitypes.PlanetJSON"
+            }
+          },
+          "400": {
+            "description": "Неверные данные",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "Планета не найдена",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/planet/{id}/create-image": {
+      "post": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Загружает изображение для планеты и возвращает обновленные данные",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "planets"
+        ],
+        "summary": "Загрузить изображение для планеты",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID планеты",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "file",
+            "description": "Изображение планеты",
+            "name": "image",
+            "in": "formData",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Статус загрузки и данные планеты",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "Неверный запрос или файл",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "Планета не найдена",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/planet/{id}/delete-planet": {
+      "delete": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Выполняет логическое удаление планеты по ID",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "planets"
+        ],
+        "summary": "Удалить планету",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID планеты",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Статус удаления",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный ID",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "Планета не найдена",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/planet/create-planet": {
+      "post": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Создает новую планету и возвращает её данные",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "planets"
+        ],
+        "summary": "Создать новую планету",
+        "parameters": [
+          {
+            "description": "Данные новой планеты",
+            "name": "planet",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apitypes.PlanetJSON"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Созданная планета",
+            "schema": {
+              "$ref": "#/definitions/apitypes.PlanetJSON"
+            }
+          },
+          "400": {
+            "description": "Неверные данные",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/planets": {
+      "get": {
+        "description": "Возвращает все планеты или фильтрует по названию",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "planets"
+        ],
+        "summary": "Получить список планет",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Название планеты для поиска",
+            "name": "planet_name",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список планет",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/apitypes.PlanetJSON"
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/planets_research/{planet_id}/{research_id}": {
+      "delete": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Удаляет связь планеты и исследования",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "planets-research"
+        ],
+        "summary": "Удалить планету из исследования",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID планеты",
+            "name": "planet_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "description": "ID исследования",
+            "name": "research_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Обновленное исследование",
+            "schema": {
+              "$ref": "#/definitions/apitypes.ResearchJSON"
+            }
+          },
+          "400": {
+            "description": "Неверные ID",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещен",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Обновляет параметры планеты в конкретном исследовании",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "planets-research"
+        ],
+        "summary": "Изменить данные планеты в исследовании",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID планеты",
+            "name": "planet_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "description": "ID исследования",
+            "name": "research_id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "Новые данные",
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apitypes.PlanetsResearchJSON"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Обновленные данные",
+            "schema": {
+              "$ref": "#/definitions/apitypes.PlanetsResearchJSON"
+            }
+          },
+          "400": {
+            "description": "Неверные данные",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/research/{id}": {
+      "get": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Возвращает полную информацию об исследовании включая планеты",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "researches"
+        ],
+        "summary": "Получить исследование по ID",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID исследования",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Данные исследования с планетами",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "Неверный ID",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещен",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "Исследование не найдено",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/research/{id}/change-research": {
+      "put": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Обновляет данные исследования",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "researches"
+        ],
+        "summary": "Изменить исследование",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID исследования",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "Новые данные исследования",
+            "name": "research",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apitypes.ResearchJSON"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Обновленное исследование",
+            "schema": {
+              "$ref": "#/definitions/apitypes.ResearchJSON"
+            }
+          },
+          "400": {
+            "description": "Неверные данные",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "Исследование не найдено",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/research/{id}/delete-research": {
+      "delete": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Выполняет логическое удаление исследования",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "researches"
+        ],
+        "summary": "Удалить исследование",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID исследования",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Статус удаления",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещен",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "Исследование не найдено",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/research/{id}/finish": {
+      "put": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Изменяет статус исследования (только для модераторов)",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "researches"
+        ],
+        "summary": "Модерировать исследование",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID исследования",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "Новый статус",
+            "name": "status",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apitypes.StatusJSON"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Результат модерации",
+            "schema": {
+              "$ref": "#/definitions/apitypes.ResearchJSON"
+            }
+          },
+          "400": {
+            "description": "Неверный запрос",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещен",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "Исследование не найдено",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/research/{id}/form": {
+      "put": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Переводит исследование в статус \"formed\"",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "researches"
+        ],
+        "summary": "Сформировать исследование",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "ID исследования",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Сформированное исследование",
+            "schema": {
+              "$ref": "#/definitions/apitypes.ResearchJSON"
+            }
+          },
+          "400": {
+            "description": "Неверный запрос",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещен",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "Исследование не найдено",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/research/research-cart": {
+      "get": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Возвращает информацию о текущем черновике исследования пользователя",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "researches"
+        ],
+        "summary": "Получить корзину исследования",
+        "responses": {
+          "200": {
+            "description": "Данные корзины исследования",
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "400": {
+            "description": "Неверный запрос",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/researches": {
+      "get": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Возвращает исследования с возможностью фильтрации по датам и статусу",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "researches"
+        ],
+        "summary": "Получить список исследований",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Начальная дата (YYYY-MM-DD)",
+            "name": "from-date",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Конечная дата (YYYY-MM-DD)",
+            "name": "to-date",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Статус исследования",
+            "name": "status",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список исследований",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/apitypes.ResearchJSON"
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный формат даты",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/sign-in": {
+      "post": {
+        "description": "Принимает логин/пароль, возвращает jwt-токен в формате {\"token\":\"...\"}.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "users"
+        ],
+        "summary": "Вход (получение токена)",
+        "parameters": [
+          {
+            "description": "Логин и пароль",
+            "name": "credentials",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apitypes.UserJSON"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "token",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "Пользователь не найден",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/sign-out": {
+      "post": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Удаляет токен текущего пользователя из хранилища. Возвращает {\"status\":\"signed_out\"}.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "users"
+        ],
+        "summary": "Выход (удаление токена)",
+        "responses": {
+          "200": {
+            "description": "status",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "Проблема с получением user_id",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка при удалении токена",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/sign-up": {
+      "post": {
+        "description": "Регистрирует нового пользователя. Возвращает URL созданного ресурса в Location и тело созданного пользователя.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "users"
+        ],
+        "summary": "Регистрация пользователя",
+        "parameters": [
+          {
+            "description": "Параметры нового пользователя",
+            "name": "user",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apitypes.UserJSON"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Пользователь создан",
+            "schema": {
+              "$ref": "#/definitions/apitypes.UserJSON"
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации или входных данных",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{login}/profile": {
+      "get": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Возвращает данные профиля (доступен только тот, чей UUID совпадает с user_id в токене).",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "users"
+        ],
+        "summary": "Получить профиль пользователя",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Логин пользователя",
+            "name": "login",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Профиль пользователя",
+            "schema": {
+              "$ref": "#/definitions/apitypes.UserJSON"
+            }
+          },
+          "400": {
+            "description": "Проблема с авторизацией/получением user_id\"}",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "403": {
+            "description": "Пользователи не совпадают",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "Пользователь не найден",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Обновляет профиль пользователя (может делать только сам пользователь).",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "users"
+        ],
+        "summary": "Изменить профиль пользователя",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Логин пользователя",
+            "name": "login",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "Новые данные профиля",
+            "name": "user",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apitypes.UserJSON"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Обновлённый профиль",
+            "schema": {
+              "$ref": "#/definitions/apitypes.UserJSON"
+            }
+          },
+          "400": {
+            "description": "Ошибка запроса или авторизации",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "Пользователь не найден",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "apitypes.PlanetJSON": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "discovery": {
+          "type": "integer"
+        },
+        "distance": {
+          "type": "integer"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "image": {
+          "type": "string"
+        },
+        "is_delete": {
+          "type": "boolean"
+        },
+        "mass": {
+          "type": "number"
+        },
+        "name": {
+          "type": "string"
+        },
+        "star_radius": {
+          "type": "integer"
+        }
+      }
+    },
+    "apitypes.PlanetsResearchJSON": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "planet_id": {
+          "type": "integer"
+        },
+        "planet_radius": {
+          "type": "integer"
+        },
+        "planet_shine": {
+          "type": "number"
+        },
+        "research_id": {
+          "type": "integer"
+        }
+      }
+    },
+    "apitypes.ResearchJSON": {
+      "type": "object",
+      "properties": {
+        "creator_login": {
+          "type": "string"
+        },
+        "date_create": {
+          "type": "string"
+        },
+        "date_finish": {
+          "type": "string"
+        },
+        "date_form": {
+          "type": "string"
+        },
+        "date_research": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "moderator_login": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "apitypes.StatusJSON": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "apitypes.UserJSON": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "is_moderator": {
+          "type": "boolean"
+        },
+        "login": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "ApiKeyAuth": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  }
+}

@@ -10,6 +10,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// DeletePlanetFromResearch godoc
+// @Summary Удалить планету из исследования
+// @Description Удаляет связь планеты и исследования
+// @Tags planets-research
+// @Produce json
+// @Param planet_id path int true "ID планеты"
+// @Param research_id path int true "ID исследования"
+// @Success 200 {object} apitypes.ResearchJSON "Обновленное исследование"
+// @Failure 400 {object} map[string]string "Неверные ID"
+// @Failure 403 {object} map[string]string "Доступ запрещен"
+// @Failure 404 {object} map[string]string "Не найдено"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
+// @Security ApiKeyAuth
+// @Router /planets_research/{planet_id}/{research_id} [delete]
 func (h *Handler) DeletePlanetFromResearch(ctx *gin.Context) {
 	researchId, err := strconv.Atoi(ctx.Param("research_id"))
 	if err != nil {
@@ -44,6 +58,21 @@ func (h *Handler) DeletePlanetFromResearch(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, apitypes.ResearchToJSON(research, creatorLogin, moderatorLogin))
 }
 
+// ChangePlanetResearch godoc
+// @Summary Изменить данные планеты в исследовании
+// @Description Обновляет параметры планеты в конкретном исследовании
+// @Tags planets-research
+// @Accept json
+// @Produce json
+// @Param planet_id path int true "ID планеты"
+// @Param research_id path int true "ID исследования"
+// @Param data body apitypes.PlanetsResearchJSON true "Новые данные"
+// @Success 200 {object} apitypes.PlanetsResearchJSON "Обновленные данные"
+// @Failure 400 {object} map[string]string "Неверные данные"
+// @Failure 404 {object} map[string]string "Не найдено"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
+// @Security ApiKeyAuth
+// @Router /planets_research/{planet_id}/{research_id} [put]
 func (h *Handler) ChangePlanetResearch(ctx *gin.Context) {
 	researchId, err := strconv.Atoi(ctx.Param("research_id"))
 	if err != nil {

@@ -3,9 +3,12 @@ package handler
 import (
 	"LAB1/internal/app/repository"
 	"errors"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"github.com/swaggo/gin-swagger"
+	`github.com/swaggo/files`
 )
 
 type Handler struct {
@@ -18,31 +21,62 @@ func NewHandler(r *repository.Repository) *Handler {
 	}
 }
 
+// RegisterHandler godoc
+// @title Astronomy Research API
+// @version 1.0
+// @description API для управления астрономическими исследованиями планет
+// @contact.name API Support
+// @contact.url http://localhost:8080
+// @contact.email support@astronomy.com
+// @license.name MIT
+// @host localhost:8080
+// @BasePath /api/v1
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func (h *Handler) RegisterHandler(router *gin.Engine) {
-	router.GET("/planets", h.GetPlanets)
-	router.GET("/planet/:id", h.GetPlanet)
-	router.POST("/planet/create-planet", h.CreatePlanet)
-	router.DELETE("/planet/:id/delete-planet", h.DeletePlanet)
-	router.PUT("/planet/:id/change-planet", h.ChangePlanet)
-	router.POST("/planet/:id/add-to-research", h.AddPlanetToResearch)
-	router.POST("/planet/:id/create-image", h.UploadImage)
+	api := router.Group("/api/v1")
 
-	router.GET("/research/research-cart", h.GetResearchCart)	
-	router.GET("/researches", h.GetResearches)
-	router.GET("/research/:id", h.GetRsearch)
-	router.PUT("/research/:id/change-research", h.ChangeResearch)
-	router.PUT("/research/:id/form", h.FormResearch)
-	router.PUT("/research/:id/finish", h.ModerateResearch)
-	router.DELETE("/research/:id/delete-research", h.DeleteResearch)
+	unauthorized := api.Group("/")
+	unauthorized.POST("/users/sign-up", h.SignUp)	
+	unauthorized.GET("/planets", h.GetPlanets)
+	unauthorized.GET("/planet/:id", h.GetPlanet)
+	unauthorized.POST("/users/sign-in", h.SignIn)
 
-	router.DELETE("/planets_research/:planet_id/:research_id", h.DeletePlanetFromResearch)
-	router.PUT("/planets_research/:planet_id/:research_id", h.ChangePlanetResearch)
+	authorized := api.Group("/")
+	authorized.Use(h.ModeratorMiddleware(false))
 
-	router.POST("/users/sign-up", h.CreateUser)
-	router.GET("/users/profile", h.GetProfile)
-	router.PUT("/users/profile", h.ChangeProfile)
-	router.POST("/users/sign-in", h.SignIn)
-	router.POST("/users/sign-out", h.SignOut)
+	authorized.POST("/planet/create-planet", h.CreatePlanet)
+	authorized.DELETE("/planet/:id/delete-planet", h.DeletePlanet)
+	authorized.PUT("/planet/:id/change-planet", h.ChangePlanet)
+	authorized.POST("/planet/:id/add-to-research", h.AddPlanetToResearch)
+	authorized.POST("/planet/:id/create-image", h.UploadImage)
+
+	authorized.GET("/research/research-cart", h.GetResearchCart)	
+	authorized.GET("/researches", h.GetResearches)
+	authorized.GET("/research/:id", h.GetRsearch)
+	authorized.PUT("/research/:id/change-research", h.ChangeResearch)
+	authorized.PUT("/research/:id/form", h.FormResearch)
+	authorized.PUT("/research/:id/finish", h.ModerateResearch)
+	authorized.DELETE("/research/:id/delete-research", h.DeleteResearch)
+
+	authorized.DELETE("/planets_research/:planet_id/:research_id", h.DeletePlanetFromResearch)
+	authorized.PUT("/planets_research/:planet_id/:research_id", h.ChangePlanetResearch)
+
+	authorized.GET("/users/:login/profile", h.GetProfile)
+	authorized.PUT("/users/:login/profile", h.ChangeProfile)
+	authorized.POST("/users/sign-out", h.SignOut)
+
+	moderator := api.Group("/")
+	moderator.Use(h.ModeratorMiddleware(true))
+	moderator.PUT("/mass-calculations/:id/moderate", h.ModerateResearch)
+
+
+	swaggerURL := ginSwagger.URL("/swagger/doc.json")
+	router.Any("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, swaggerURL))
+	router.GET("/swagger", func(c *gin.Context) {
+		c.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
+	})
 }
 
 func (h *Handler) RegisterStatic(router *gin.Engine) {
@@ -52,7 +86,6 @@ func (h *Handler) RegisterStatic(router *gin.Engine) {
 func (h *Handler) errorHandler(ctx *gin.Context, errorStatusCode int, err error) {
 	logrus.Error(err.Error())
 	
-	// Добавляем более специфичную обработку ошибок
 	var errorMessage string
 	switch {
 	case errors.Is(err, repository.ErrNotFound):
