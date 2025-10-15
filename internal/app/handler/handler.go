@@ -21,19 +21,7 @@ func NewHandler(r *repository.Repository) *Handler {
 	}
 }
 
-// RegisterHandler godoc
-// @title Astronomy Research API
-// @version 1.0
-// @description API для управления астрономическими исследованиями планет
-// @contact.name API Support
-// @contact.url http://localhost:8080
-// @contact.email support@astronomy.com
-// @license.name MIT
-// @host localhost:8080
-// @BasePath /api/v1
-// @securityDefinitions.apikey BearerAuth
-// @in header
-// @name Authorization
+
 func (h *Handler) RegisterHandler(router *gin.Engine) {
 	api := router.Group("/api/v1")
 

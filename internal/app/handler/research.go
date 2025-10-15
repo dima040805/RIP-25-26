@@ -89,7 +89,10 @@ func (h *Handler) GetResearches(ctx *gin.Context) {
 func (h *Handler) GetResearchCart(ctx *gin.Context){
 	userID, err := getUserID(ctx)
 	if err != nil {
-		h.errorHandler(ctx, http.StatusBadRequest, err)
+		ctx.JSON(http.StatusOK, gin.H{
+			"id":          -1,
+			"planets_count": 0,
+		})
 		return
 	}
 	planetsCount := h.Repository.GetResearchCount(userID)

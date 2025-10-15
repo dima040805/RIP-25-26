@@ -1,5 +1,13 @@
      
-
+// RegisterHandler godoc
+// @title Astronomy Research API
+// @version 1.0
+// @description API для управления астрономическими исследованиями планет
+// @host localhost:8080
+// @BasePath /api/v1
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 package main
 
 import (
@@ -14,6 +22,7 @@ import (
 	"LAB1/internal/pkg"
 	_ "LAB1/docs"
 )
+
 
 func main() {
 	router := gin.Default()

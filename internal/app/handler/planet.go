@@ -49,7 +49,7 @@ func (h *Handler) GetPlanets(ctx *gin.Context) {
 
 // GetPlanet godoc
 // @Summary Получить планету по ID
-// @Description Возвращает информацию о планете по её идентификатору
+// @Description Возвращает информацию о планете по её идентификаторуqqqq
 // @Tags planets
 // @Produce json
 // @Param id path int true "ID планеты"
