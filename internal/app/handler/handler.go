@@ -31,6 +31,11 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	unauthorized.GET("/planet/:id", h.GetPlanet)
 	unauthorized.POST("/users/sign-in", h.SignIn)
 
+	optionalauthorized := api.Group("/")
+	optionalauthorized.Use(h.WithOptionalAuthCheck())
+	optionalauthorized.GET("/research/research-cart", h.GetResearchCart)	
+
+
 	authorized := api.Group("/")
 	authorized.Use(h.ModeratorMiddleware(false))
 
@@ -40,7 +45,6 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	authorized.POST("/planet/:id/add-to-research", h.AddPlanetToResearch)
 	authorized.POST("/planet/:id/create-image", h.UploadImage)
 
-	authorized.GET("/research/research-cart", h.GetResearchCart)	
 	authorized.GET("/researches", h.GetResearches)
 	authorized.GET("/research/:id", h.GetRsearch)
 	authorized.PUT("/research/:id/change-research", h.ChangeResearch)
