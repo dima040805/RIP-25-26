@@ -52,16 +52,21 @@ func (r *Repository) GetPlanetsByName(name string) ([]ds.Planet, error) {
 
 func (r *Repository) CreatePlanet(planetJSON apitypes.PlanetJSON) (ds.Planet, error) {
 	planet := apitypes.PlanetFromJSON(planetJSON)
+	
 	if planet.StarRadius <= 0 {
 		return ds.Planet{}, errors.New("неправильный радиус звезды")
 	}
 	if planet.Mass <= 0 {
-		return ds.Planet{}, errors.New("нерпавильная масса")
+		return ds.Planet{}, errors.New("неправильная масса")
 	}
-	err := r.db.Create(&planet).First(&planet).Error
+	
+	err := r.db.Select("Name", "Image", "Description", "Distance", "Mass", "Discovery", "StarRadius", "IsDelete").
+		Create(&planet).Error
+	
 	if err != nil {
 		return ds.Planet{}, err
 	}
+	
 	return planet, nil
 }
 
