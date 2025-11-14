@@ -23,6 +23,8 @@ func NewHandler(r *repository.Repository) *Handler {
 
 
 func (h *Handler) RegisterHandler(router *gin.Engine) {
+	router.Use(CORSMiddleware())
+	
 	api := router.Group("/api/v1")
 
 	unauthorized := api.Group("/")
@@ -49,7 +51,6 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	authorized.GET("/research/:id", h.GetRsearch)
 	authorized.PUT("/research/:id/change-research", h.ChangeResearch)
 	authorized.PUT("/research/:id/form", h.FormResearch)
-	authorized.PUT("/research/:id/finish", h.ModerateResearch)
 	authorized.DELETE("/research/:id/delete-research", h.DeleteResearch)
 
 	authorized.DELETE("/planets_research/:planet_id/:research_id", h.DeletePlanetFromResearch)
@@ -61,7 +62,7 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 
 	moderator := api.Group("/")
 	moderator.Use(h.ModeratorMiddleware(true))
-	moderator.PUT("/mass-calculations/:id/moderate", h.ModerateResearch)
+	moderator.PUT("/research/:id/finish", h.ModerateResearch)
 
 
 	swaggerURL := ginSwagger.URL("/swagger/doc.json")

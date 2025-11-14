@@ -13,6 +13,34 @@ import (
 
 const prefix = "Bearer"
 
+func CORSMiddleware() gin.HandlerFunc {
+
+	return func(c *gin.Context) {
+
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, Accept, Origin, Cache-Control, X-Requested-With")
+
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
+
+		c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length, Authorization")
+
+		if c.Request.Method == "OPTIONS" {
+
+			c.AbortWithStatus(http.StatusNoContent)
+
+			return
+
+		}
+
+		c.Next()
+
+	}
+
+}
+
 func (h *Handler) ModeratorMiddleware(allowedRole bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := extractTokenFromHeader(c.Request)
@@ -73,17 +101,17 @@ func (h *Handler) ModeratorMiddleware(allowedRole bool) gin.HandlerFunc {
 }
 
 func (h *Handler) WithOptionalAuthCheck() func(ctx *gin.Context) {
-    return func(c *gin.Context) {
-        tokenString := c.GetHeader("Authorization")
-        prefix := "Bearer "
+	return func(c *gin.Context) {
+		tokenString := c.GetHeader("Authorization")
+		prefix := "Bearer "
 
-        if tokenString == "" || !strings.HasPrefix(tokenString, prefix) {
-            c.Set("user_id", "") 
-            c.Next()
-            return
-        }
+		if tokenString == "" || !strings.HasPrefix(tokenString, prefix) {
+			c.Set("user_id", "")
+			c.Next()
+			return
+		}
 
-        tokenString = strings.TrimPrefix(tokenString, prefix)
+		tokenString = strings.TrimPrefix(tokenString, prefix)
 
 		blacklisted, err := h.Repository.IsTokenBlacklisted(context.Background(), tokenString)
 		if err != nil {
@@ -92,50 +120,50 @@ func (h *Handler) WithOptionalAuthCheck() func(ctx *gin.Context) {
 		}
 		if blacklisted {
 			c.Set("user_id", "")
-            c.Next()
-            return
+			c.Next()
+			return
 		}
 
-        token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-            if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-                return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-            }
-            return []byte(os.Getenv("JWT_KEY")), nil
-        })
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte(os.Getenv("JWT_KEY")), nil
+		})
 
-        if err != nil || token == nil || !token.Valid {
-            c.Set("user_id", "")
-            c.Next()
-            return
-        }
+		if err != nil || token == nil || !token.Valid {
+			c.Set("user_id", "")
+			c.Next()
+			return
+		}
 
-        claims, ok := token.Claims.(jwt.MapClaims)
-        if !ok {
-            c.Set("user_id", "")
-            c.Next()
-            return
-        }
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			c.Set("user_id", "")
+			c.Next()
+			return
+		}
 
-        userIDValue, exists := claims["user_id"]
-        if !exists || userIDValue == nil {
-            c.Set("user_id", "")
-            c.Next()
-            return
-        }
+		userIDValue, exists := claims["user_id"]
+		if !exists || userIDValue == nil {
+			c.Set("user_id", "")
+			c.Next()
+			return
+		}
 
-        var userID string
-        switch v := userIDValue.(type) {
-        case string:
-            userID = v
-        case float64:
-            userID = fmt.Sprintf("%.0f", v) 
-        default:
-            userID = fmt.Sprintf("%v", v)
-        }
+		var userID string
+		switch v := userIDValue.(type) {
+		case string:
+			userID = v
+		case float64:
+			userID = fmt.Sprintf("%.0f", v)
+		default:
+			userID = fmt.Sprintf("%v", v)
+		}
 
-        c.Set("user_id", userID)
-        c.Next()
-    }
+		c.Set("user_id", userID)
+		c.Next()
+	}
 }
 
 func extractTokenFromHeader(r *http.Request) string {

@@ -63,7 +63,7 @@ func (r *Repository) GetResearchPlanets(id int) ([]ds.Planet, ds.Research, error
 
 	var planets []ds.Planet
 	sub := r.db.Table("planets_researches").Where("Research_id = ?", research.ID)
-	err = r.db.Order("id DESC").Where("id IN (?)", sub.Select("planet_id")).Find(&planets).Error
+	err = r.db.Order("id").Where("id IN (?)", sub.Select("planet_id")).Find(&planets).Error
 
 	if err != nil {
 		return []ds.Planet{}, ds.Research{}, err

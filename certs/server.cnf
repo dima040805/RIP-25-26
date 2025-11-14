@@ -1,0 +1,21 @@
+[req]
+distinguished_name = req_distinguished_name
+x509_extensions = v3_req
+prompt = no
+
+[req_distinguished_name]
+C = RU
+ST = Moscow
+L = Moscow
+O = Astronomy
+CN = 172.16.236.220
+
+[v3_req]
+keyUsage = keyEncipherment, dataEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[alt_names]
+IP.1 = 172.16.236.220
+IP.2 = 127.0.0.1
+DNS.1 = localhost

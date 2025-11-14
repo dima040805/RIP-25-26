@@ -177,10 +177,12 @@ func (h *Handler) GetRsearch(ctx *gin.Context) {
 		resp2 = append(resp2, apitypes.PlanetsResearchToJSON(r))
 	}
 
+
 	ctx.JSON(http.StatusOK, gin.H{
 		"research": apitypes.ResearchToJSON(research, creatorLogin, moderatorLogin),
 		"planets":   resp,
 		"planetsResearch": resp2,
+		"planetsCount": len(resp2),
 	})
 }
 
