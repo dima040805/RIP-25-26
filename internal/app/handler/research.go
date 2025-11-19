@@ -523,6 +523,7 @@ func (h *Handler) UpdatePlanetRadius(ctx *gin.Context) {
         return
     }
 
+	
     ctx.JSON(http.StatusOK, gin.H{
         "message": "Planet radius updated successfully",
         "research_id": researchId,
