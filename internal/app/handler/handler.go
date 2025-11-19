@@ -32,6 +32,9 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	unauthorized.GET("/planets", h.GetPlanets)
 	unauthorized.GET("/planet/:id", h.GetPlanet)
 	unauthorized.POST("/users/sign-in", h.SignIn)
+	
+    unauthorized.PUT("/research/:id/radius", h.UpdatePlanetRadius)
+
 
 	optionalauthorized := api.Group("/")
 	optionalauthorized.Use(h.WithOptionalAuthCheck())

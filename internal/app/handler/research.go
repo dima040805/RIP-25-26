@@ -29,51 +29,70 @@ import (
 // @Security ApiKeyAuth
 // @Router /researches [get]
 func (h *Handler) GetResearches(ctx *gin.Context) {
-	fromDate := ctx.Query("from-date")
-	var from = time.Time{}
-	var to = time.Time{}
-	if fromDate != "" {
-		from1, err := time.Parse("2006-01-02", fromDate)
-		if err != nil {
-			h.errorHandler(ctx, http.StatusBadRequest, err)
-			return
-		}
-		from = from1
-	}
+    fromDate := ctx.Query("from-date")
+    var from = time.Time{}
+    var to = time.Time{}
+    if fromDate != "" {
+        from1, err := time.Parse("2006-01-02", fromDate)
+        if err != nil {
+            h.errorHandler(ctx, http.StatusBadRequest, err)
+            return
+        }
+        from = from1
+    }
 
-	toDate := ctx.Query("to-date")
-	if toDate != "" {
-		to1, err := time.Parse("2006-01-02", toDate)
-		if err != nil {
-			h.errorHandler(ctx, http.StatusBadRequest, err)
-			return
-		}
-		to = to1
-	}
+    toDate := ctx.Query("to-date")
+    if toDate != "" {
+        to1, err := time.Parse("2006-01-02", toDate)
+        if err != nil {
+            h.errorHandler(ctx, http.StatusBadRequest, err)
+            return
+        }
+        to = to1
+    }
 
-	status := ctx.Query("status")
+    status := ctx.Query("status")
 
-	researches, err := h.Repository.GetResearches(from, to, status)
-	if err != nil {
-		h.errorHandler(ctx, http.StatusInternalServerError, err)
-		return
-	}
+    researches, err := h.Repository.GetResearches(from, to, status)
+    if err != nil {
+        h.errorHandler(ctx, http.StatusInternalServerError, err)
+        return
+    }
 
-	researches = h.filterResearchesByAuth(researches, ctx)
+    researches = h.filterResearchesByAuth(researches, ctx)
 
+    // Создаем расширенный ответ с информацией о расчетах
+    type ResearchWithStats struct {
+        apitypes.ResearchJSON
+        TotalPlanets    int `json:"total_planets"`
+        CalculatedPlanets int `json:"calculated_planets"`
+    }
 
+    resp := make([]ResearchWithStats, 0, len(researches))
+    for _, research := range researches {
+        creatorLogin, moderatorLogin, err := h.Repository.GetModeratorAndCreatorLogin(research)
+        if err != nil {
+            h.errorHandler(ctx, http.StatusInternalServerError, err)
+            return
+        }
 
+        // Получаем общее количество планет в исследовании
+        planetsResearch, _ := h.Repository.GetPlanetsResearches(research.ID)
+        totalPlanets := len(planetsResearch)
 
-	resp := make([]apitypes.ResearchJSON, 0, len(researches))
-	for _, c := range researches {
-		creatorLogin, moderatorLogin, err := h.Repository.GetModeratorAndCreatorLogin(c)
-		if err != nil {
-			h.errorHandler(ctx, http.StatusInternalServerError, err)
-			return
-		}
-		resp = append(resp, apitypes.ResearchToJSON(c, creatorLogin, moderatorLogin))
-	}
-	ctx.JSON(http.StatusOK, resp)
+        // Получаем количество посчитанных планет
+        calculatedPlanets, _ := h.Repository.GetCalculatedPlanetsCount(research.ID)
+
+        researchWithStats := ResearchWithStats{
+            ResearchJSON:     apitypes.ResearchToJSON(research, creatorLogin, moderatorLogin),
+            TotalPlanets:     totalPlanets,
+            CalculatedPlanets: calculatedPlanets,
+        }
+
+        resp = append(resp, researchWithStats)
+    }
+    
+    ctx.JSON(http.StatusOK, resp)
 }
 
 // GetResearchCart godoc
@@ -431,4 +450,83 @@ func (h *Handler) hasAccessToResearch(creatorID uuid.UUID, ctx *gin.Context) boo
 	}
 
 	return creatorID == userID || user.IsModerator
+}
+
+// UpdatePlanetRadius godoc
+// @Summary Обновить радиус планеты (для асинхронного сервиса)
+// @Description Принимает результаты расчета радиуса планеты от асинхронного сервиса
+// @Tags researches
+// @Accept json
+// @Produce json
+// @Param id path int true "ID исследования"
+// @Param data body map[string]interface{} true "Данные радиуса"
+// @Success 200 {object} map[string]string "Радиус обновлен"
+// @Failure 400 {object} map[string]string "Неверные данные"
+// @Failure 403 {object} map[string]string "Доступ запрещен (неверный токен)"
+// @Failure 404 {object} map[string]string "Исследование не найдено"
+// @Router /research/{id}/radius [put]
+func (h *Handler) UpdatePlanetRadius(ctx *gin.Context) {
+    // Проверка авторизации через токен
+    authHeader := ctx.GetHeader("Authorization")
+    if authHeader != "secret123" {
+        ctx.JSON(http.StatusForbidden, gin.H{
+            "status": "error",
+            "description": "доступ запрещен",
+        })
+        return
+    }
+
+    idStr := ctx.Param("id")
+    researchId, err := strconv.Atoi(idStr)
+    if err != nil {
+        ctx.JSON(http.StatusBadRequest, gin.H{
+            "status": "error", 
+            "description": "неверный ID исследования",
+        })
+        return
+    }
+
+    var requestData map[string]interface{}
+    if err := ctx.BindJSON(&requestData); err != nil {
+        ctx.JSON(http.StatusBadRequest, gin.H{
+            "status": "error",
+            "description": "неверный формат данных",
+        })
+        return
+    }
+
+    planetId, hasPlanetId := requestData["planet_id"].(float64)
+    planetRadius, hasRadius := requestData["planet_radius"].(float64)
+
+    if !hasPlanetId || !hasRadius {
+        ctx.JSON(http.StatusBadRequest, gin.H{
+            "status": "error",
+            "description": "planet_id и planet_radius обязательны",
+        })
+        return
+    }
+
+    // Обновляем радиус планеты в исследовании
+    err = h.Repository.UpdatePlanetRadius(researchId, int(planetId), int(planetRadius))
+    if err != nil {
+        if errors.Is(err, repository.ErrNotFound) {
+            ctx.JSON(http.StatusNotFound, gin.H{
+                "status": "error",
+                "description": "исследование не найдено",
+            })
+        } else {
+            ctx.JSON(http.StatusInternalServerError, gin.H{
+                "status": "error",
+                "description": "внутренняя ошибка сервера",
+            })
+        }
+        return
+    }
+
+    ctx.JSON(http.StatusOK, gin.H{
+        "message": "Planet radius updated successfully",
+        "research_id": researchId,
+        "planet_id": planetId,
+        "planet_radius": planetRadius,
+    })
 }

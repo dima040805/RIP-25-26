@@ -3,10 +3,13 @@ package repository
 import (
 	"LAB1/internal/app/api_types"
 	"LAB1/internal/app/ds"
+	"bytes"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
+	"net/http"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,22 +19,22 @@ import (
 
 
 func (r *Repository) GetResearches(from, to time.Time, status string) ([]ds.Research, error) {
-	var researches []ds.Research
-	sub := r.db.Where("status != 'deleted' and status != 'draft'")
-	if !from.IsZero() {
-		sub = sub.Where("date_create > ?", from)
-	}
-	if !to.IsZero() {
-		sub = sub.Where("date_create < ?", to.Add(time.Hour*24))
-	}
-	if status != "" {
-		sub = sub.Where("status = ?", status)
-	}
-	err := sub.Order("id").Find(&researches).Error
-	if err != nil {
-		return nil, err
-	}
-	return researches, nil
+    var researches []ds.Research
+    sub := r.db.Where("status != 'deleted' and status != 'draft'")
+    if !from.IsZero() {
+        sub = sub.Where("date_create > ?", from)
+    }
+    if !to.IsZero() {
+        sub = sub.Where("date_create < ?", to.Add(time.Hour*24))
+    }
+    if status != "" {
+        sub = sub.Where("status = ?", status)
+    }
+    err := sub.Order("id").Find(&researches).Error
+    if err != nil {
+        return nil, err
+    }
+    return researches, nil
 }
 
 func (r *Repository) GetPlanetsResearches(researchId int) ([]ds.PlanetsResearch, error) {
@@ -238,6 +241,7 @@ func (r *Repository) ModerateResearch(id int, status string, currUserId uuid.UUI
 		return ds.Research{}, errors.New("this calculation can not be " + status)
 	}
 
+	// Обновляем статус исследования
 	err = r.db.Model(&research).Updates(ds.Research{
 		Status: status,
 		DateFinish: sql.NullTime{
@@ -249,33 +253,95 @@ func (r *Repository) ModerateResearch(id int, status string, currUserId uuid.UUI
 			Valid: true,
 		},
 	}).Error
-		if err != nil {
+	if err != nil {
 		return ds.Research{}, err
 	}
 
+	// Если исследование одобрено - запускаем асинхронный расчет радиусов для КАЖДОЙ планеты
 	if status == "completed" {
 		planetsResearch, err := r.GetPlanetsResearches(research.ID)
 		if err != nil {
 			return ds.Research{}, err
 		}
+		
+		// Для каждой планеты запускаем асинхронный расчет
 		for _, planetResearch := range planetsResearch {
 			planet, err := r.GetPlanet(int(planetResearch.PlanetID))
 			if err != nil {
-				return ds.Research{}, err
+				logrus.Errorf("Error getting planet %d: %v", planetResearch.PlanetID, err)
+				continue
 			}
-			planetRadius, err := CalculatePlanetRadius(planet.StarRadius, research.DateResearch, planetResearch.PlanetShine)
-			if err != nil {
-				return ds.Research{}, err
-			}
-			err = r.db.Model(&planetResearch).Updates(ds.PlanetsResearch{
-				PlanetRadius: int(planetRadius),
-			}).Error
-			if err != nil {
-				return ds.Research{}, err
-			}
+			
+			// Запускаем асинхронный расчет радиуса для этой планеты
+			go r.calculateSinglePlanetRadiusAsync(research.ID, planet, planetResearch)
 		}
+		
+		logrus.Infof("Started async radius calculations for research %d, planets: %d", research.ID, len(planetsResearch))
 	}
 
 	return research, nil
 }
 
+func (r *Repository) calculateSinglePlanetRadiusAsync(researchId int, planet *ds.Planet, planetResearch ds.PlanetsResearch) {
+    // URL Django сервиса для расчета одного радиуса
+    asyncServiceURL := "http://localhost:8000/api/calculate-radius/"
+    
+    // Данные для расчета ОДНОГО радиуса
+    requestData := map[string]interface{}{
+        "research_id": researchId,
+        "planet_id":   planet.ID,
+        "star_radius": planet.StarRadius,
+        "planet_shine": planetResearch.PlanetShine,
+    }
+
+    jsonData, err := json.Marshal(requestData)
+    if err != nil {
+        logrus.Errorf("Error marshaling request data for planet %d: %v", planet.ID, err)
+        return
+    }
+
+    // Отправляем запрос в асинхронный сервис
+    resp, err := http.Post(asyncServiceURL, "application/json", bytes.NewBuffer(jsonData))
+    if err != nil {
+        logrus.Errorf("Error sending request to async service for planet %d: %v", planet.ID, err)
+        return
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != 202 {
+        logrus.Errorf("Async service returned status %d for planet %d", resp.StatusCode, planet.ID)
+        return
+    }
+
+    logrus.Infof("Successfully started async calculation for research %d, planet %d", researchId, planet.ID)
+}
+
+func (r *Repository) UpdatePlanetRadius(researchId int, planetId int, planetRadius int) error {
+    var planetsResearch ds.PlanetsResearch
+    err := r.db.Where("research_id = ? AND planet_id = ?", researchId, planetId).First(&planetsResearch).Error
+    if err != nil {
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            return fmt.Errorf("%w: связь планеты с исследованием не найдена", ErrNotFound)
+        }
+        return err
+    }
+
+    err = r.db.Model(&planetsResearch).Update("planet_radius", planetRadius).Error
+    if err != nil {
+        return err
+    }
+
+    logrus.Printf("Updated planet radius: research=%d, planet=%d, radius=%d", researchId, planetId, planetRadius)
+    return nil
+}
+
+func (r *Repository) GetCalculatedPlanetsCount(researchId int) (int, error) {
+    var count int64
+    err := r.db.Model(&ds.PlanetsResearch{}).
+        Where("research_id = ? AND planet_radius IS NOT NULL AND planet_radius > 0", researchId).
+        Count(&count).Error
+    if err != nil {
+        return 0, err
+    }
+    return int(count), nil
+}
