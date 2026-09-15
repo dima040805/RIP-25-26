@@ -52,7 +52,7 @@ func (h *Handler) ModeratorMiddleware(allowedRole bool) gin.HandlerFunc {
 
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, nil
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
 			return []byte(os.Getenv("JWT_KEY")), nil
 		})
@@ -167,15 +167,9 @@ func (h *Handler) WithOptionalAuthCheck() func(ctx *gin.Context) {
 }
 
 func extractTokenFromHeader(r *http.Request) string {
-	bearerToken := r.Header.Get("Authorization")
-
-	if bearerToken == "" {
+	scheme, token, found := strings.Cut(r.Header.Get("Authorization"), " ")
+	if !found || scheme != prefix {
 		return ""
 	}
-
-	if strings.Split(bearerToken, " ")[0] != prefix {
-		return ""
-	}
-
-	return strings.Split(bearerToken, " ")[1]
+	return strings.TrimSpace(token)
 }

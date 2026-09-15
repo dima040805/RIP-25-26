@@ -1,9 +1,9 @@
 package minio
 
 import (
-	"LAB1/internal/app/ds"
 	"context"
 	"fmt"
+	"github.com/dima040805/RIP-25-26/internal/app/ds"
 	"io"
 	"mime/multipart"
 	"os"
@@ -23,7 +23,7 @@ func NewMinioClient(endpoint, accessKey, secretKey string, useSSL bool) (*minio.
 func UploadImage(ctx context.Context, client *minio.Client, bucket string, file *multipart.FileHeader, planet ds.Planet) (string, error) {
 	f, err := file.Open()
 	if err != nil {
-		return "",err
+		return "", err
 	}
 	defer f.Close()
 
@@ -60,7 +60,6 @@ func UploadFromReader(ctx context.Context, client *minio.Client, bucket, objectN
 func DeleteObject(ctx context.Context, client *minio.Client, bucket, objectName string) error {
 	return client.RemoveObject(ctx, bucket, objectName, minio.RemoveObjectOptions{})
 }
-
 
 func InitMinio() (*minio.Client, error) {
 	host := os.Getenv("MINIO_HOST")

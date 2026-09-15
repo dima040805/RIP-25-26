@@ -1,9 +1,9 @@
 package handler
 
 import (
-	apitypes "LAB1/internal/app/api_types"
-	"LAB1/internal/app/repository"
 	"errors"
+	apitypes "github.com/dima040805/RIP-25-26/internal/app/api_types"
+	"github.com/dima040805/RIP-25-26/internal/app/repository"
 	"net/http"
 	"strconv"
 

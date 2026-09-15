@@ -1,23 +1,23 @@
 package apitypes
 
-import "LAB1/internal/app/ds"
+import "github.com/dima040805/RIP-25-26/internal/app/ds"
 
 type PlanetJSON struct {
-	ID          int 	`json:"id"`
-	Name        string 	`json:"name"`
-	Image       string 	`json:"image"`
-	Distance    int		`json:"distance"`
-	Description string 	`json:"description"`
+	ID          int     `json:"id"`
+	Name        string  `json:"name"`
+	Image       string  `json:"image"`
+	Distance    int     `json:"distance"`
+	Description string  `json:"description"`
 	Mass        float64 `json:"mass"`
-	Discovery   int		`json:"discovery"`
-	StarRadius  int		`json:"star_radius"`
-	IsDelete    bool   	`json:"is_delete"`
+	Discovery   int     `json:"discovery"`
+	StarRadius  int     `json:"star_radius"`
+	IsDelete    bool    `json:"is_delete"`
 }
 
 func PlanetToJSON(planet ds.Planet) PlanetJSON {
 	return PlanetJSON{
-		ID:			 planet.ID,
-		IsDelete:  	 planet.IsDelete,  
+		ID:          planet.ID,
+		IsDelete:    planet.IsDelete,
 		Image:       planet.Image,
 		Name:        planet.Name,
 		Distance:    planet.Distance,
@@ -30,7 +30,7 @@ func PlanetToJSON(planet ds.Planet) PlanetJSON {
 
 func PlanetFromJSON(planetJSON PlanetJSON) ds.Planet {
 	return ds.Planet{
-		IsDelete:  	 planetJSON.IsDelete,  
+		IsDelete:    planetJSON.IsDelete,
 		Name:        planetJSON.Name,
 		Distance:    planetJSON.Distance,
 		Description: planetJSON.Description,

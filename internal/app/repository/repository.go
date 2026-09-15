@@ -8,14 +8,13 @@ import (
 	"os"
 	"time"
 
-	minioClient "LAB1/internal/app/minioClient"
+	minioClient "github.com/dima040805/RIP-25-26/internal/app/minioClient"
 
 	"github.com/go-redis/redis"
 	"github.com/minio/minio-go/v7"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
-
 
 var (
 	ErrNotFound      = errors.New("not found")
@@ -25,9 +24,9 @@ var (
 )
 
 type Repository struct {
-	db     *gorm.DB
-	mc     *minio.Client	
-	rd 		*redis.Client
+	db *gorm.DB
+	mc *minio.Client
+	rd *redis.Client
 }
 
 func NewRepository(dsn string) (*Repository, error) {
@@ -47,12 +46,10 @@ func NewRepository(dsn string) (*Repository, error) {
 		DB:       0,
 	})
 
-
-	
 	return &Repository{
-		db:     db,
-		mc:     mc,	
-		rd: 	rd,
+		db: db,
+		mc: mc,
+		rd: rd,
 	}, nil
 }
 

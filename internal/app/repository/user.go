@@ -1,10 +1,9 @@
 package repository
 
 import (
-	apitypes "LAB1/internal/app/api_types"
-	"LAB1/internal/app/ds"
 	"errors"
-	"fmt"
+	apitypes "github.com/dima040805/RIP-25-26/internal/app/api_types"
+	"github.com/dima040805/RIP-25-26/internal/app/ds"
 	"os"
 	"time"
 
@@ -143,8 +142,6 @@ func HashPassword(password string) (string, error) {
 }
 
 func CheckPasswordHash(password, hash string) bool {
-	fmt.Println(password)
-	
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }

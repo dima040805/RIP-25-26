@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"mime/multipart"
 
-	"LAB1/internal/app/api_types"
-	"LAB1/internal/app/ds"
-	"LAB1/internal/app/minioClient"
+	"github.com/dima040805/RIP-25-26/internal/app/api_types"
+	"github.com/dima040805/RIP-25-26/internal/app/ds"
+	"github.com/dima040805/RIP-25-26/internal/app/minioClient"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -52,21 +52,21 @@ func (r *Repository) GetPlanetsByName(name string) ([]ds.Planet, error) {
 
 func (r *Repository) CreatePlanet(planetJSON apitypes.PlanetJSON) (ds.Planet, error) {
 	planet := apitypes.PlanetFromJSON(planetJSON)
-	
+
 	if planet.StarRadius <= 0 {
 		return ds.Planet{}, errors.New("неправильный радиус звезды")
 	}
 	if planet.Mass <= 0 {
 		return ds.Planet{}, errors.New("неправильная масса")
 	}
-	
+
 	err := r.db.Select("Name", "Image", "Description", "Distance", "Mass", "Discovery", "StarRadius", "IsDelete").
 		Create(&planet).Error
-	
+
 	if err != nil {
 		return ds.Planet{}, err
 	}
-	
+
 	return planet, nil
 }
 
@@ -135,7 +135,7 @@ func (r *Repository) AddPlanetToResearch(researchId int, planetId int) error {
 		}
 		return err
 	}
-	
+
 	planetsResearch := ds.PlanetsResearch{}
 	result := r.db.Where("planet_id = ? and research_id = ?", planetId, researchId).Find(&planetsResearch)
 	if result.Error != nil {
@@ -145,7 +145,7 @@ func (r *Repository) AddPlanetToResearch(researchId int, planetId int) error {
 		return fmt.Errorf("%w: планета %d уже в исследованиии %d", ErrAlreadyExists, planetId, researchId)
 	}
 	return r.db.Create(&ds.PlanetsResearch{
-		PlanetID:    uint(planetId),
+		PlanetID:   uint(planetId),
 		ResearchID: uint(researchId),
 	}).Error
 }
@@ -167,19 +167,19 @@ func (r *Repository) GetModeratorAndCreatorLogin(research ds.Research) (string, 
 		}
 		moderatorLogin = moderator.Login
 	}
-	
+
 	return creator.Login, moderatorLogin, nil
 }
 
-func (r *Repository) UploadImage(ctx *gin.Context, planetId int, file *multipart.FileHeader) ( ds.Planet, error) {
+func (r *Repository) UploadImage(ctx *gin.Context, planetId int, file *multipart.FileHeader) (ds.Planet, error) {
 	planet_, err := r.GetPlanet(planetId)
 	if err != nil {
 		return ds.Planet{}, err
 	}
-	
+
 	fileName, err := minio.UploadImage(ctx, r.mc, minio.GetImgBucket(), file, *planet_)
 	if err != nil {
-		return ds.Planet{},err
+		return ds.Planet{}, err
 	}
 
 	planet, err := r.GetPlanet(planetId)

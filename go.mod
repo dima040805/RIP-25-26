@@ -1,4 +1,4 @@
-module LAB1
+module github.com/dima040805/RIP-25-26
 
 go 1.24.2
 

@@ -349,3 +349,9 @@ DerivedData/
 **/xcshareddata/WorkspaceSettings.xcsettings
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,windows,linux,webstorm+all,visualstudiocode,xcode,node
+
+### Project ###
+certs/*.key
+certs/*.crt
+/server
+/migrate

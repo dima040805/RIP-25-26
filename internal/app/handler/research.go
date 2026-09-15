@@ -4,12 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
-	"LAB1/internal/app/api_types"
-	"LAB1/internal/app/ds"
-	"LAB1/internal/app/repository"
+	"github.com/dima040805/RIP-25-26/internal/app/api_types"
+	"github.com/dima040805/RIP-25-26/internal/app/ds"
+	"github.com/dima040805/RIP-25-26/internal/app/repository"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -29,70 +30,70 @@ import (
 // @Security ApiKeyAuth
 // @Router /researches [get]
 func (h *Handler) GetResearches(ctx *gin.Context) {
-    fromDate := ctx.Query("from-date")
-    var from = time.Time{}
-    var to = time.Time{}
-    if fromDate != "" {
-        from1, err := time.Parse("2006-01-02", fromDate)
-        if err != nil {
-            h.errorHandler(ctx, http.StatusBadRequest, err)
-            return
-        }
-        from = from1
-    }
+	fromDate := ctx.Query("from-date")
+	var from = time.Time{}
+	var to = time.Time{}
+	if fromDate != "" {
+		from1, err := time.Parse("2006-01-02", fromDate)
+		if err != nil {
+			h.errorHandler(ctx, http.StatusBadRequest, err)
+			return
+		}
+		from = from1
+	}
 
-    toDate := ctx.Query("to-date")
-    if toDate != "" {
-        to1, err := time.Parse("2006-01-02", toDate)
-        if err != nil {
-            h.errorHandler(ctx, http.StatusBadRequest, err)
-            return
-        }
-        to = to1
-    }
+	toDate := ctx.Query("to-date")
+	if toDate != "" {
+		to1, err := time.Parse("2006-01-02", toDate)
+		if err != nil {
+			h.errorHandler(ctx, http.StatusBadRequest, err)
+			return
+		}
+		to = to1
+	}
 
-    status := ctx.Query("status")
+	status := ctx.Query("status")
 
-    researches, err := h.Repository.GetResearches(from, to, status)
-    if err != nil {
-        h.errorHandler(ctx, http.StatusInternalServerError, err)
-        return
-    }
+	researches, err := h.Repository.GetResearches(from, to, status)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
 
-    researches = h.filterResearchesByAuth(researches, ctx)
+	researches = h.filterResearchesByAuth(researches, ctx)
 
-    // Создаем расширенный ответ с информацией о расчетах
-    type ResearchWithStats struct {
-        apitypes.ResearchJSON
-        TotalPlanets    int `json:"total_planets"`
-        CalculatedPlanets int `json:"calculated_planets"`
-    }
+	// Создаем расширенный ответ с информацией о расчетах
+	type ResearchWithStats struct {
+		apitypes.ResearchJSON
+		TotalPlanets      int `json:"total_planets"`
+		CalculatedPlanets int `json:"calculated_planets"`
+	}
 
-    resp := make([]ResearchWithStats, 0, len(researches))
-    for _, research := range researches {
-        creatorLogin, moderatorLogin, err := h.Repository.GetModeratorAndCreatorLogin(research)
-        if err != nil {
-            h.errorHandler(ctx, http.StatusInternalServerError, err)
-            return
-        }
+	resp := make([]ResearchWithStats, 0, len(researches))
+	for _, research := range researches {
+		creatorLogin, moderatorLogin, err := h.Repository.GetModeratorAndCreatorLogin(research)
+		if err != nil {
+			h.errorHandler(ctx, http.StatusInternalServerError, err)
+			return
+		}
 
-        // Получаем общее количество планет в исследовании
-        planetsResearch, _ := h.Repository.GetPlanetsResearches(research.ID)
-        totalPlanets := len(planetsResearch)
+		// Получаем общее количество планет в исследовании
+		planetsResearch, _ := h.Repository.GetPlanetsResearches(research.ID)
+		totalPlanets := len(planetsResearch)
 
-        // Получаем количество посчитанных планет
-        calculatedPlanets, _ := h.Repository.GetCalculatedPlanetsCount(research.ID)
+		// Получаем количество посчитанных планет
+		calculatedPlanets, _ := h.Repository.GetCalculatedPlanetsCount(research.ID)
 
-        researchWithStats := ResearchWithStats{
-            ResearchJSON:     apitypes.ResearchToJSON(research, creatorLogin, moderatorLogin),
-            TotalPlanets:     totalPlanets,
-            CalculatedPlanets: calculatedPlanets,
-        }
+		researchWithStats := ResearchWithStats{
+			ResearchJSON:      apitypes.ResearchToJSON(research, creatorLogin, moderatorLogin),
+			TotalPlanets:      totalPlanets,
+			CalculatedPlanets: calculatedPlanets,
+		}
 
-        resp = append(resp, researchWithStats)
-    }
-    
-    ctx.JSON(http.StatusOK, resp)
+		resp = append(resp, researchWithStats)
+	}
+
+	ctx.JSON(http.StatusOK, resp)
 }
 
 // GetResearchCart godoc
@@ -105,11 +106,11 @@ func (h *Handler) GetResearches(ctx *gin.Context) {
 // @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
 // @Security ApiKeyAuth
 // @Router /research/research-cart [get]
-func (h *Handler) GetResearchCart(ctx *gin.Context){
+func (h *Handler) GetResearchCart(ctx *gin.Context) {
 	userID, err := getUserID(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusOK, gin.H{
-			"id":          -1,
+			"id":            -1,
 			"planets_count": 0,
 		})
 		return
@@ -118,7 +119,7 @@ func (h *Handler) GetResearchCart(ctx *gin.Context){
 
 	if planetsCount == 0 {
 		ctx.JSON(http.StatusOK, gin.H{
-			"status":          "no_draft",
+			"status":        "no_draft",
 			"planets_count": planetsCount,
 		})
 		return
@@ -130,7 +131,7 @@ func (h *Handler) GetResearchCart(ctx *gin.Context){
 			h.errorHandler(ctx, http.StatusUnauthorized, err)
 		} else if errors.Is(err, repository.ErrNoDraft) {
 			ctx.JSON(http.StatusOK, gin.H{
-				"status":          "no_draft",
+				"status":        "no_draft",
 				"planets_count": 0,
 			})
 		} else {
@@ -140,7 +141,7 @@ func (h *Handler) GetResearchCart(ctx *gin.Context){
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"id":          research.ID,
+		"id":            research.ID,
 		"planets_count": h.Repository.GetResearchCount(research.CreatorID),
 	})
 }
@@ -190,18 +191,17 @@ func (h *Handler) GetRsearch(ctx *gin.Context) {
 	}
 
 	planetsResearch, _ := h.Repository.GetPlanetsResearches(research.ID)
-	
+
 	resp2 := make([]apitypes.PlanetsResearchJSON, 0, len(planetsResearch))
 	for _, r := range planetsResearch {
 		resp2 = append(resp2, apitypes.PlanetsResearchToJSON(r))
 	}
 
-
 	ctx.JSON(http.StatusOK, gin.H{
-		"research": apitypes.ResearchToJSON(research, creatorLogin, moderatorLogin),
-		"planets":   resp,
+		"research":        apitypes.ResearchToJSON(research, creatorLogin, moderatorLogin),
+		"planets":         resp,
 		"planetsResearch": resp2,
-		"planetsCount": len(resp2),
+		"planetsCount":    len(resp2),
 	})
 }
 
@@ -309,7 +309,7 @@ func (h *Handler) ChangeResearch(ctx *gin.Context) {
 // @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
 // @Security ApiKeyAuth
 // @Router /research/{id}/delete-research [delete]
-func (h *Handler) DeleteResearch(ctx *gin.Context){
+func (h *Handler) DeleteResearch(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	researchId, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -318,7 +318,7 @@ func (h *Handler) DeleteResearch(ctx *gin.Context){
 	}
 
 	status := "deleted"
-	
+
 	_, err = h.Repository.FormResearch(researchId, status)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
@@ -350,59 +350,59 @@ func (h *Handler) DeleteResearch(ctx *gin.Context){
 // @Security ApiKeyAuth
 // @Router /research/{id}/finish [put]
 func (h *Handler) ModerateResearch(ctx *gin.Context) {
-    userID, err := getUserID(ctx)
-    if err != nil {
-        h.errorHandler(ctx, http.StatusBadRequest, err)
-        return
-    }
+	userID, err := getUserID(ctx)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusBadRequest, err)
+		return
+	}
 
-    idStr := ctx.Param("id")
-    id, err := strconv.Atoi(idStr)
-    if err != nil {
-        h.errorHandler(ctx, http.StatusBadRequest, err)
-        return
-    }
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusBadRequest, err)
+		return
+	}
 
-    var statusJSON apitypes.StatusJSON
-    if err := ctx.BindJSON(&statusJSON); err != nil {
-        h.errorHandler(ctx, http.StatusBadRequest, err)
-        return
-    }
+	var statusJSON apitypes.StatusJSON
+	if err := ctx.BindJSON(&statusJSON); err != nil {
+		h.errorHandler(ctx, http.StatusBadRequest, err)
+		return
+	}
 
-    user, err := h.Repository.GetUserByID(userID)
-    if err != nil {
-        if errors.Is(err, repository.ErrNotFound) {
-            h.errorHandler(ctx, http.StatusNotFound, err)
-        } else {
-            h.errorHandler(ctx, http.StatusInternalServerError, err)
-        }
-        return
-    }
-    
-    if !user.IsModerator {
-        h.errorHandler(ctx, http.StatusForbidden, errors.New("требуются права модератора"))
-        return
-    }
+	user, err := h.Repository.GetUserByID(userID)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			h.errorHandler(ctx, http.StatusNotFound, err)
+		} else {
+			h.errorHandler(ctx, http.StatusInternalServerError, err)
+		}
+		return
+	}
 
-    research, err := h.Repository.ModerateResearch(id, statusJSON.Status, userID)
-    if err != nil {
-        if errors.Is(err, repository.ErrNotFound) {
-            h.errorHandler(ctx, http.StatusNotFound, err)
-        } else if errors.Is(err, repository.ErrNotAllowed) {
-            h.errorHandler(ctx, http.StatusForbidden, err)
-        } else {
-            h.errorHandler(ctx, http.StatusInternalServerError, err)
-        }
-        return
-    }
+	if !user.IsModerator {
+		h.errorHandler(ctx, http.StatusForbidden, errors.New("требуются права модератора"))
+		return
+	}
 
-    creatorLogin, moderatorLogin, err := h.Repository.GetModeratorAndCreatorLogin(research)
-    if err != nil {
-        h.errorHandler(ctx, http.StatusInternalServerError, err)
-        return
-    }
+	research, err := h.Repository.ModerateResearch(id, statusJSON.Status, userID)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			h.errorHandler(ctx, http.StatusNotFound, err)
+		} else if errors.Is(err, repository.ErrNotAllowed) {
+			h.errorHandler(ctx, http.StatusForbidden, err)
+		} else {
+			h.errorHandler(ctx, http.StatusInternalServerError, err)
+		}
+		return
+	}
 
-    ctx.JSON(http.StatusOK, apitypes.ResearchToJSON(research, creatorLogin, moderatorLogin))
+	creatorLogin, moderatorLogin, err := h.Repository.GetModeratorAndCreatorLogin(research)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, apitypes.ResearchToJSON(research, creatorLogin, moderatorLogin))
 }
 
 func (h *Handler) filterResearchesByAuth(researches []ds.Research, ctx *gin.Context) []ds.Research {
@@ -424,14 +424,14 @@ func (h *Handler) filterResearchesByAuth(researches []ds.Research, ctx *gin.Cont
 	}
 
 	var userResearches []ds.Research
-    for _, research := range researches {
-        fmt.Println(research.ID)
-        if research.CreatorID == userID {
-            userResearches = append(userResearches, research)
-        }
-    }
-    
-    return userResearches
+	for _, research := range researches {
+		fmt.Println(research.ID)
+		if research.CreatorID == userID {
+			userResearches = append(userResearches, research)
+		}
+	}
+
+	return userResearches
 
 }
 
@@ -466,68 +466,75 @@ func (h *Handler) hasAccessToResearch(creatorID uuid.UUID, ctx *gin.Context) boo
 // @Failure 404 {object} map[string]string "Исследование не найдено"
 // @Router /research/{id}/radius [put]
 func (h *Handler) UpdatePlanetRadius(ctx *gin.Context) {
-    // Проверка авторизации через токен
-    authHeader := ctx.GetHeader("Authorization")
-    if authHeader != "secret123" {
-        ctx.JSON(http.StatusForbidden, gin.H{
-            "status": "error",
-            "description": "доступ запрещен",
-        })
-        return
-    }
+	// Проверка авторизации через токен
+	authHeader := ctx.GetHeader("Authorization")
+	if authHeader != asyncAuthToken() {
+		ctx.JSON(http.StatusForbidden, gin.H{
+			"status":      "error",
+			"description": "доступ запрещен",
+		})
+		return
+	}
 
-    idStr := ctx.Param("id")
-    researchId, err := strconv.Atoi(idStr)
-    if err != nil {
-        ctx.JSON(http.StatusBadRequest, gin.H{
-            "status": "error", 
-            "description": "неверный ID исследования",
-        })
-        return
-    }
+	idStr := ctx.Param("id")
+	researchId, err := strconv.Atoi(idStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":      "error",
+			"description": "неверный ID исследования",
+		})
+		return
+	}
 
-    var requestData map[string]interface{}
-    if err := ctx.BindJSON(&requestData); err != nil {
-        ctx.JSON(http.StatusBadRequest, gin.H{
-            "status": "error",
-            "description": "неверный формат данных",
-        })
-        return
-    }
+	var requestData map[string]interface{}
+	if err := ctx.BindJSON(&requestData); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":      "error",
+			"description": "неверный формат данных",
+		})
+		return
+	}
 
-    planetId, hasPlanetId := requestData["planet_id"].(float64)
-    planetRadius, hasRadius := requestData["planet_radius"].(float64)
+	planetId, hasPlanetId := requestData["planet_id"].(float64)
+	planetRadius, hasRadius := requestData["planet_radius"].(float64)
 
-    if !hasPlanetId || !hasRadius {
-        ctx.JSON(http.StatusBadRequest, gin.H{
-            "status": "error",
-            "description": "planet_id и planet_radius обязательны",
-        })
-        return
-    }
+	if !hasPlanetId || !hasRadius {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":      "error",
+			"description": "planet_id и planet_radius обязательны",
+		})
+		return
+	}
 
-    // Обновляем радиус планеты в исследовании
-    err = h.Repository.UpdatePlanetRadius(researchId, int(planetId), int(planetRadius))
-    if err != nil {
-        if errors.Is(err, repository.ErrNotFound) {
-            ctx.JSON(http.StatusNotFound, gin.H{
-                "status": "error",
-                "description": "исследование не найдено",
-            })
-        } else {
-            ctx.JSON(http.StatusInternalServerError, gin.H{
-                "status": "error",
-                "description": "внутренняя ошибка сервера",
-            })
-        }
-        return
-    }
+	// Обновляем радиус планеты в исследовании
+	err = h.Repository.UpdatePlanetRadius(researchId, int(planetId), int(planetRadius))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			ctx.JSON(http.StatusNotFound, gin.H{
+				"status":      "error",
+				"description": "исследование не найдено",
+			})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"status":      "error",
+				"description": "внутренняя ошибка сервера",
+			})
+		}
+		return
+	}
 
-	
-    ctx.JSON(http.StatusOK, gin.H{
-        "message": "Planet radius updated successfully",
-        "research_id": researchId,
-        "planet_id": planetId,
-        "planet_radius": planetRadius,
-    })
+	ctx.JSON(http.StatusOK, gin.H{
+		"message":       "Planet radius updated successfully",
+		"research_id":   researchId,
+		"planet_id":     planetId,
+		"planet_radius": planetRadius,
+	})
+}
+
+// asyncAuthToken is the shared secret the calculation service sends back with results.
+func asyncAuthToken() string {
+	if token := os.Getenv("ASYNC_AUTH_TOKEN"); token != "" {
+		return token
+	}
+	return "secret123"
 }

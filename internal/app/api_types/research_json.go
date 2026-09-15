@@ -1,20 +1,19 @@
 package apitypes
 
 import (
-	"LAB1/internal/app/ds"
+	"github.com/dima040805/RIP-25-26/internal/app/ds"
 	"time"
 )
 
 type ResearchJSON struct {
-	ID           	int       		`json:"id"`
-	Status       	string    		`json:"status"`
-	DateResearch 	string 		`json:"date_research"`               
-	DateCreate   	time.Time 		`json:"date_create"`                 
-	CreatorLogin    string       	`json:"creator_login"`           
-	DateForm     	*time.Time 		`json:"date_form"`              
-	DateFinish   	*time.Time 		`json:"date_finish"`                
-	ModeratorLogin  *string       	`json:"moderator_login"`                 
-
+	ID             int        `json:"id"`
+	Status         string     `json:"status"`
+	DateResearch   string     `json:"date_research"`
+	DateCreate     time.Time  `json:"date_create"`
+	CreatorLogin   string     `json:"creator_login"`
+	DateForm       *time.Time `json:"date_form"`
+	DateFinish     *time.Time `json:"date_finish"`
+	ModeratorLogin *string    `json:"moderator_login"`
 }
 
 func ResearchToJSON(research ds.Research, creatorLogin string, moderatorLogin string) ResearchJSON {
@@ -32,22 +31,17 @@ func ResearchToJSON(research ds.Research, creatorLogin string, moderatorLogin st
 		mLogin = &moderatorLogin
 	}
 
-
-
-
-
 	return ResearchJSON{
-		ID:				research.ID,
-		Status:       	research.Status,
-		DateResearch: 	research.DateResearch,              
-		DateCreate:   	research.DateCreate,                 
-		CreatorLogin:   creatorLogin,           
-		DateForm:     	dateForm,              
-		DateFinish:   	dateFinish,               
-		ModeratorLogin:	mLogin,
+		ID:             research.ID,
+		Status:         research.Status,
+		DateResearch:   research.DateResearch,
+		DateCreate:     research.DateCreate,
+		CreatorLogin:   creatorLogin,
+		DateForm:       dateForm,
+		DateFinish:     dateFinish,
+		ModeratorLogin: mLogin,
 	}
 }
-
 
 func ResearchFromJSON(research ResearchJSON) ds.Research {
 	if research.DateResearch == "" {

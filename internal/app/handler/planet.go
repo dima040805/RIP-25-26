@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strconv"
 
-	apitypes "LAB1/internal/app/api_types"
-	"LAB1/internal/app/ds"
-	"LAB1/internal/app/repository"
+	apitypes "github.com/dima040805/RIP-25-26/internal/app/api_types"
+	"github.com/dima040805/RIP-25-26/internal/app/ds"
+	"github.com/dima040805/RIP-25-26/internal/app/repository"
 
 	"github.com/gin-gonic/gin"
 )
@@ -59,7 +59,7 @@ func (h *Handler) GetPlanets(ctx *gin.Context) {
 // @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
 // @Router /planet/{id} [get]
 func (h *Handler) GetPlanet(ctx *gin.Context) {
-	idStr := ctx.Param("id") 
+	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
@@ -156,7 +156,7 @@ func (h *Handler) DeletePlanet(ctx *gin.Context) {
 // @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
 // @Security ApiKeyAuth
 // @Router /planet/{id}/change-planet [put]
-func (h *Handler) ChangePlanet(ctx *gin.Context){
+func (h *Handler) ChangePlanet(ctx *gin.Context) {
 	var planetJSON apitypes.PlanetJSON
 	if err := ctx.BindJSON(&planetJSON); err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
@@ -226,9 +226,9 @@ func (h *Handler) AddPlanetToResearch(ctx *gin.Context) {
 		}
 		return
 	}
-	
+
 	status := http.StatusOK
-	
+
 	if created {
 		ctx.Header("Location", fmt.Sprintf("/research/%v", research.ID))
 		status = http.StatusCreated

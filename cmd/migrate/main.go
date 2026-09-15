@@ -1,11 +1,11 @@
 package main
 
 import (
+	"github.com/dima040805/RIP-25-26/internal/app/ds"
+	"github.com/dima040805/RIP-25-26/internal/app/dsn"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"LAB1/internal/app/ds"
-	"LAB1/internal/app/dsn"
 )
 
 func main() {
@@ -21,7 +21,6 @@ func main() {
 		&ds.PlanetsResearch{},
 		&ds.Research{},
 		&ds.User{},
-
 	)
 	if err != nil {
 		panic("cant migrate db")

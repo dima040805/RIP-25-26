@@ -1,12 +1,12 @@
 package handler
 
 import (
-	apitypes "LAB1/internal/app/api_types"
-	"LAB1/internal/app/repository"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	apitypes "github.com/dima040805/RIP-25-26/internal/app/api_types"
+	"github.com/dima040805/RIP-25-26/internal/app/repository"
 	"net/http"
 	"os"
 	"time"
@@ -114,7 +114,7 @@ func (h *Handler) GetProfile(ctx *gin.Context) {
 		return
 	}
 
-	user.Password=""
+	user.Password = ""
 
 	ctx.JSON(http.StatusOK, apitypes.UserToJSON(user))
 }
@@ -236,8 +236,6 @@ func getUserID(ctx *gin.Context) (uuid.UUID, error) {
 	}
 	return userID, nil
 }
-
-
 
 func tokenTTLFromClaims(claims jwt.MapClaims) (time.Duration, error) {
 	expVal, ok := claims["exp"]

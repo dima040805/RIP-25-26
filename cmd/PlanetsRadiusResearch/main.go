@@ -1,4 +1,3 @@
-     
 // RegisterHandler godoc
 // @title Astronomy Research API
 // @version 1.0
@@ -11,18 +10,15 @@
 package main
 
 import (
-	"fmt"
-
+	_ "github.com/dima040805/RIP-25-26/docs"
+	"github.com/dima040805/RIP-25-26/internal/app/config"
+	"github.com/dima040805/RIP-25-26/internal/app/dsn"
+	"github.com/dima040805/RIP-25-26/internal/app/handler"
+	"github.com/dima040805/RIP-25-26/internal/app/repository"
+	"github.com/dima040805/RIP-25-26/internal/pkg"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"LAB1/internal/app/config"
-	"LAB1/internal/app/dsn"
-	"LAB1/internal/app/handler"
-	"LAB1/internal/app/repository"
-	"LAB1/internal/pkg"
-	_ "LAB1/docs"
 )
-
 
 func main() {
 	router := gin.Default()
@@ -32,7 +28,6 @@ func main() {
 	}
 
 	postgresString := dsn.FromEnv()
-	fmt.Println(postgresString)
 
 	rep, errRep := repository.NewRepository(postgresString)
 	if errRep != nil {
