@@ -159,7 +159,7 @@ func (h *Handler) ChangeProfile(ctx *gin.Context) {
 		return
 	}
 	if user.ID != userID {
-		h.errorHandler(ctx, http.StatusForbidden, err)
+		h.errorHandler(ctx, http.StatusForbidden, repository.ErrNotAllowed)
 		return
 	}
 

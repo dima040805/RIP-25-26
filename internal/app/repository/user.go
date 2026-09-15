@@ -89,10 +89,7 @@ func (r *Repository) ChangeProfile(login string, userJSON apitypes.UserJSON) (ds
 		currUser.Password = hashedPassword
 	}
 
-	if userJSON.IsModerator && !currUser.IsModerator {
-		userJSON.IsModerator = false
-	}
-	currUser.IsModerator = userJSON.IsModerator
+	// The role is not editable through the profile: it stays as it is.
 
 	err = r.db.Save(&currUser).Error
 	if err != nil {

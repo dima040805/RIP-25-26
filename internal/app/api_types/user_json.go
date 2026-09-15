@@ -11,10 +11,10 @@ type UserJSON struct {
 }
 
 func UserToJSON(user ds.User) UserJSON {
+	// The password hash never leaves the service.
 	return UserJSON{
 		ID:          user.ID,
 		Login:       user.Login,
-		Password:    user.Password,
 		IsModerator: user.IsModerator,
 	}
 }
